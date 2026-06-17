@@ -133,7 +133,7 @@ local_css = """
 """
 st.markdown(local_css, unsafe_allow_html=True)
 
-# ----------------- 🧠 데이터 세션 관리 (파이썬 로직) -----------------
+# ----------------- 🧠 데이터 세션 관리 -----------------
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'current_user' not in st.session_state:
@@ -141,7 +141,7 @@ if 'current_user' not in st.session_state:
 if 'boss_verified' not in st.session_state:
     st.session_state.boss_verified = False
 
-# 정식 승인 부원 목록 (학번: 비밀번호)
+# 정식 승인 부원 목록
 if 'approved_users' not in st.session_state:
     st.session_state.approved_users = {
         "20501": "1234",
@@ -149,7 +149,7 @@ if 'approved_users' not in st.session_state:
         "30101": "1234"
     }
 
-# 메인 홈 '이전 활동 보고' 데이터 리스트 (부장목록 데이터)
+# 부장목록 데이터 (이전 활동 보고 리스트)
 if 'boss_log_list' not in st.session_state:
     st.session_state.boss_log_list = [
         "03월: 신입 부원 모집, 면접 및 오리엔테이션",
@@ -173,10 +173,50 @@ if 'taste_id_counter' not in st.session_state:
     st.session_state.taste_id_counter = 4
 
 
+# ----------------- 💻 사이드바 목차 및 인증 제어 -----------------
+st.sidebar.title("💚 DUIT 메뉴")
+
+# 기본 목차 구성
+menu_options = ["🏠 메인 홈"]
+
+# 부장 인증 게이트 통과 시 목차에 '👑 부장 전용 관리관' 동적 추가
+if st.session_state.boss_verified:
+    menu_options.append("👑 부장 전용 관리관")
+
+selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu_options)
+
+st.sidebar.markdown("---")
+
+# 부장 로그인 로직 관리
+if st.session_state.boss_verified:
+    st.sidebar.success("👑 부장 마스터 모드 활성화 중")
+    if st.sidebar.button("부장 모드 종료"):
+        st.session_state.boss_verified = False
+        st.rerun()
+else:
+    st.sidebar.markdown("### 🔑 부장 인증 게이트")
+    boss_pwd_input = st.sidebar.text_input("마스터 패스워드 입력:", type="password", placeholder="비밀번호 입력 시 목차 오픈")
+    if boss_pwd_input == "2025":
+        st.session_state.boss_verified = True
+        st.rerun()
+
+st.sidebar.markdown("---")
+# 일반 부원 로그인 상태 관리
+if st.session_state.logged_in:
+    st.sidebar.success(f"🔒 {st.session_state.current_user} 로그인 완료")
+    if st.sidebar.button("부원 로그아웃"):
+        st.session_state.logged_in = False
+        st.session_state.current_user = ""
+        st.rerun()
+else:
+    st.sidebar.warning("🔓 부원 비로그인 상태")
+
+
 # ==============================================================================
-# 🏠 함수 1: [메인 홈] 화면 레이아웃 정의
+# 🏠 1. [완전 분리] 메인 홈 화면 렌더링 영역
 # ==============================================================================
-def main_home():
+if selected_menu == "🏠 메인 홈":
+
     # [상단 헤더 배너]
     st.markdown("""
     <div class="main-header">
@@ -216,7 +256,7 @@ def main_home():
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 동아리 게시판 섹션 (부서 / 일정 / 이전 활동 보고 내용 유지) ---
+    # --- 동아리 게시판 섹션 (부서 / 일정 / 부장 목록 기반 활동 보고) ---
     st.markdown('<div class="section-title">동아리 게시판</div>', unsafe_allow_html=True)
     b_col1, b_col2, b_col3 = st.columns(3)
 
@@ -252,6 +292,7 @@ def main_home():
             <h4 style="color:#222; margin-top:5px; margin-bottom:8px;">연간 핵심 일정 기록</h4>
         """, unsafe_allow_html=True)
         
+        # 부장님이 전용 페이지에서 제어하는 실시간 부장목록 리스트 출력
         for log_item in st.session_state.boss_log_list:
             st.markdown(f"• {log_item}")
             
@@ -298,12 +339,12 @@ def main_home():
                             })
                             st.toast(f"{req_id} 학번의 등록 신청이 발송되었습니다.", icon="📩")
                     else:
-                        st.error("학번과 비밀번호를 완벽히 입력해주세요.")
+                        st.error("학번 and 비밀번호를 완벽히 입력해주세요.")
     else:
         st.success(f"✅ 현재 {st.session_state.current_user} 계정으로 로그인되어 있습니다.")
 
     # --- 취향 공유 섹션 ---
-    st.markdown('<div class="section-title">✨ 부원 취향 공유 룸</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">✨ 부원 취향 공유 ルーム</div>', unsafe_allow_html=True)
 
     if not st.session_state.logged_in:
         st.warning("🔒 이 공간은 비공개 상태입니다. 위 메뉴에서 'DUIT 부원 인증'을 완료해야 접근할 수 있습니다.")
@@ -350,121 +391,78 @@ def main_home():
 
 
 # ==============================================================================
-# 👑 함수 2: [부장 전용 관리관] 완전 독립형 독립 페이지 정의
+# 👑 2. [완전 분리] 부장 전용 단독 마스터 제어실 페이지 렌더링 영역
 # ==============================================================================
-def admin_page():
-    st.title("👑 DUIT 부장 독립형 마스터 대시보드")
-    st.write("사이드바 목차(메뉴)를 클릭하여 진입한 완전 분리형 관리 전용 페이지입니다.")
+elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_verified:
+    
+    st.title("👑 DUIT 부장 전용 관리 대시보드")
+    st.write("메인 홈 화면에서 완전히 벗어난, 부장님만을 위한 비밀 독점 통제 페이지입니다.")
     st.markdown("---")
     
-    # [파트 1: 이전 활동 보고 데이터(부장목록) 유동적 제어]
-    st.markdown("### 🚀 '이전 활동 보고' 부장목록 실시간 수정")
-    with st.form("boss_log_add_form_page"):
-        st.write("메인 홈 화면 게시판의 [이전 활동 보고] 내용을 추가합니다.")
-        input_log = st.text_input("추가할 내역 입력 (예: '07월: 외부 정보보안 전문가 초청 특강'):")
-        add_log_btn = st.form_submit_button("➕ 메인 홈 게시판에 즉시 추가")
+    # 🔥 [핵심 기능] 이전 활동 보고 데이터(부장목록) 관리소
+    st.subheader("🚀 '이전 활동 보고' 부장목록 커스텀 편집")
+    
+    with st.form("boss_log_add_form_final"):
+        st.write("텍스트를 입력하면 메인 홈 [이전 활동 보고] 게시판 목록에 즉시 동적 추가됩니다.")
+        input_log = st.text_input("추가할 내역을 작성하세요 (예: '07월: 동아리 해커톤 대회 개최'):")
+        add_log_btn = st.form_submit_button("➕ 메인 홈 리스트에 등록")
         
         if add_log_btn and input_log.strip():
             st.session_state.boss_log_list.append(input_log.strip())
-            st.success("메인 홈 이전 활동 보고 리스트에 추가되었습니다!")
+            st.success("성공적으로 추가되었습니다! 메인 홈 화면에서 확인 가능합니다.")
             st.rerun()
 
-    st.write("**현재 출력 중인 리스트 내용 (클릭 시 원클릭 제거):**")
+    st.write("**현재 메인 홈에 표시 중인 활동 목록 (클릭하면 즉시 실시간 삭제):**")
     for idx, log_text in enumerate(st.session_state.boss_log_list):
         cl1, cl2 = st.columns([6, 1])
         cl1.info(log_text)
-        if cl2.button("🗑️ 제거", key=f"remove_log_p_{idx}"):
+        if cl2.button("🗑️ 즉시 삭제", key=f"final_remove_log_{idx}"):
             st.session_state.boss_log_list.pop(idx)
             st.rerun()
             
     st.markdown("---")
     
-    # [파트 2: 신규 가입 회원 신청 목록]
-    st.markdown("### 📩 신규 부원 가입 신청 관리소")
+    # 📩 신규 부원 가입 신청 관리소
+    st.subheader("📩 부원 가입 신청 수락/반려 제어기")
     if not st.session_state.signup_queue:
-        st.info("현재 승인을 기다리고 있는 대기 학생 가입서가 없습니다.")
+        st.info("현재 대기 중인 신규 가입 신청서가 없습니다.")
     else:
         for req_user in st.session_state.signup_queue:
             with st.container():
                 r_col1, r_col2, r_col3 = st.columns([2, 1, 1])
                 with r_col1:
-                    st.warning(f"👤 가입 희망 학번: **{req_user['id']}** | 신청 비밀번호: `{req_user['pw']}`")
+                    st.warning(f"👤 신청 학생 학번: **{req_user['id']}** | 패스워드: `{req_user['pw']}`")
                 with r_col2:
-                    if st.button(f"✅ 회원 승인", key=f"admin_app_p_{req_user['id']}"):
+                    if st.button(f"✅ 최종 승인", key=f"final_app_{req_user['id']}"):
                         st.session_state.approved_users[req_user['id']] = req_user['pw']
                         st.session_state.signup_queue.remove(req_user)
                         st.rerun()
                 with r_col3:
-                    if st.button(f"❌ 가입 반려", key=f"admin_rej_p_{req_user['id']}"):
+                    if st.button(f"❌ 가입 거절", key=f"final_rej_{req_user['id']}"):
                         st.session_state.signup_queue.remove(req_user)
                         st.rerun()
                         
     st.markdown("---")
     
-    # [파트 3: 모든 부원들의 취향 총괄 수정/삭제]
-    st.markdown("### 🛠️ 부원 취향 공유방 전체 글 마스터 검열기")
+    # 🛠️ 모든 부원들의 취향 총괄 검열 관리
+    st.subheader("🛠️ 전체 부원 취향 조각 마스터 통제소")
     if len(st.session_state.tastes_list) == 0:
-        st.write("부원들이 작성한 카드가 존재하지 않습니다.")
+        st.info("부원들이 등록한 취향 카드가 비어있습니다.")
     else:
         for t_item in st.session_state.tastes_list:
-            with st.expander(f"⚙️ [{t_item['category']}] 카드 ID: {t_item['id']} 내용 제어"):
-                edit_input = st.text_input("글 내용 강제 수정", value=t_item['text'], key=f"master_edit_p_{t_item['id']}")
+            with st.expander(f"⚙️ [{t_item['category']}] 카드 번호: {t_item['id']} 편집창"):
+                edit_input = st.text_input("내용 강제 변경", value=t_item['text'], key=f"final_edit_{t_item['id']}")
                 
                 if edit_input != t_item['text'] and edit_input.strip():
                     t_item['text'] = edit_input.strip()
-                    st.toast("텍스트가 변경되었습니다.")
+                    st.toast("부장 권한으로 글 내용이 수정되었습니다.")
                 
-                if st.button("🗑️ 이 카드 완전 삭제", key=f"master_del_p_{t_item['id']}"):
+                if st.button("🗑️ 해당 카드 영구 파기", key=f"final_del_{t_item['id']}"):
                     st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != t_item['id']]
                     st.rerun()
 
 
-# ==============================================================================
-# 💻 3. 라우팅 및 사이드바 렌더링 영역 (메인 실행부)
-# ==============================================================================
-# 기본 목차 구성
-menu_options = ["🏠 메인 홈"]
-
-# 부장 인증 상태일 때만 목차 리스트에 추가됨
-if st.session_state.boss_verified:
-    menu_options.append("👑 부장 전용 관리관")
-
-selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu_options)
-
-st.sidebar.markdown("---")
-
-# 사이드바 하단 부원 인증 및 부장 시크릿 로그인 게이트
-if st.session_state.boss_verified:
-    st.sidebar.success("👑 부장 마스터 모드 활성화 중")
-    if st.sidebar.button("부장 모드 종료"):
-        st.session_state.boss_verified = False
-        st.rerun()
-else:
-    st.sidebar.markdown("### 🔑 부장 인증 게이트")
-    boss_pwd_input = st.sidebar.text_input("마스터 패스워드 입력:", type="password", placeholder="비밀번호 입력 시 목차 오픈")
-    if boss_pwd_input == "2025":
-        st.session_state.boss_verified = True
-        st.rerun()
-
-st.sidebar.markdown("---")
-if st.session_state.logged_in:
-    st.sidebar.success(f"🔒 {st.session_state.current_user} 로그인 완료")
-    if st.sidebar.button("부원 로그아웃"):
-        st.session_state.logged_in = False
-        st.session_state.current_user = ""
-        st.rerun()
-else:
-    st.sidebar.warning("🔓 부원 비로그인 상태")
-
-
-# ⭐ 선택된 목차에 맞춰 완벽 분리된 함수형 라우팅 실행
-if selected_menu == "🏠 메인 홈":
-    main_home()
-elif selected_menu == "👑 부장 전용 관리관":
-    admin_page()
-
-
-# [공통 푸터 영역]
+# ----------------- 🌐 시스템 공통 하단 푸터 -----------------
 st.markdown("""
 <div style="background-color: #00664F; color: #F5F5F5; text-align: center; padding: 20px; border-radius: 10px; margin-top: 60px; font-size: 0.9rem;">
     © 2026 DUIT. All rights reserved. | 잠실여자고등학교 2층 정보실
