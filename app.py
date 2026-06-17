@@ -149,7 +149,7 @@ if 'is_admin' not in st.session_state:
 if 'current_user' not in st.session_state:
     st.session_state.current_user = ""
 
-# 정식 승인 부원 목록 (학번: 비밀번호)
+# 정식 승인 부원 목록
 if 'approved_users' not in st.session_state:
     st.session_state.approved_users = {
         "20501": "1234",
@@ -157,7 +157,7 @@ if 'approved_users' not in st.session_state:
         "30101": "1234"
     }
 
-# 👑 부장/운영진 목록 데이터 추가
+# 부장/운영진 목록 데이터
 if 'leader_list' not in st.session_state:
     st.session_state.leader_list = [
         {"role": "👑 동아리 부장", "name": "김다윗 (20401)"},
@@ -168,7 +168,7 @@ if 'leader_list' not in st.session_state:
 if 'signup_queue' not in st.session_state:
     st.session_state.signup_queue = []
 
-# 취향 공유 초기 데이터 리스트
+# 취향 공유 초기 데이터
 if 'tastes_list' not in st.session_state:
     st.session_state.tastes_list = [
         {"id": 0, "category": "🎵 코딩 노동요", "text": "최애 코딩 노동요 플레이리스트 공유해요!"},
@@ -250,7 +250,7 @@ if selected_menu == "🏠 메인 홈":
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 동아리 게시판 섹션 (부서 / 일정 / 부장 목록 3열 구성) ---
+    # --- 동아리 게시판 섹션 (부서 / 일정 / 임원진 목록) ---
     st.markdown('<div class="section-title">동아리 게시판</div>', unsafe_allow_html=True)
     b_col1, b_col2, b_col3 = st.columns(3)
 
@@ -280,7 +280,6 @@ if selected_menu == "🏠 메인 홈":
         st.markdown('</div>', unsafe_allow_html=True)
 
     with b_col3:
-        # ✨ 요청하신 부장 및 임원 목록 카드 구현 완료
         st.markdown('<div class="info-card"><h3>👑 DUIT 운영진 명단</h3>', unsafe_allow_html=True)
         for leader in st.session_state.leader_list:
             st.markdown(f"• **{leader['role']}**: {leader['name']}")
@@ -335,9 +334,9 @@ if selected_menu == "🏠 메인 홈":
                             st.toast(f"{req_id} 학번의 등록 신청이 발송되었습니다.", icon="📩")
                     else:
                         st.error("학번과 비밀번호를 모두 기입한 후 신청해주세요.")
-else:
-    status_msg = "👑 부장 권한으로 로그인 중입니다. 사이드바 메뉴에서 관리관으로 진입할 수 있습니다." if st.session_state.is_admin else f"✅ {st.session_state.current_user} 정식 부원 계정으로 로그인 중입니다."
-    st.success(status_msg)
+    else:
+        status_msg = "👑 부장 권한으로 로그인 중입니다. 사이드바 메뉴에서 관리관으로 진입할 수 있습니다." if st.session_state.is_admin else f"✅ {st.session_state.current_user} 정식 부원 계정으로 로그인 중입니다."
+        st.success(status_msg)
 
     # --- 취향 공유 섹션 ---
     st.markdown('<div class="section-title">✨ 부원 취향 공유 룸</div>', unsafe_allow_html=True)
@@ -451,5 +450,21 @@ elif selected_menu == "👑 부장 전용 관리관":
     else:
         for t_item in st.session_state.tastes_list:
             with st.expander(f"⚙️ [{t_item['category']}] 카드 ID: {t_item['id']} - 편집창"):
-                edit_input = st.text_input(f"내용 수정창 (ID: {t_item['id']})", value=
+                edit_input = st.text_input(f"내용 수정창 (ID: {t_item['id']})", value=t_item['text'], key=f"master_edit_{t_item['id']}")
+                
+                if edit_input != t_item['text'] and edit_input.strip():
+                    t_item['text'] = edit_input.strip()
+                    st.toast("부장 권한으로 텍스트가 강제 수정되었습니다.")
+                
+                if st.button("🗑️ 이 카드 완전 삭제", key=f"master_del_{t_item['id']}"):
+                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != t_item['id']]
+                    st.success("해당 부원의 글을 완전히 삭제처리 했습니다.")
+                    st.rerun()
+
+# [공통 푸터 영역]
+st.markdown("""
+<div style="background-color: #00664F; color: #F5F5F5; text-align: center; padding: 20px; border-radius: 10px; margin-top: 60px; font-size: 0.9rem;">
+    © 2026 DUIT. All rights reserved. | 잠실여자고등학교 2층 정보실
+</div>
+""", unsafe_allow_html=True)
 
