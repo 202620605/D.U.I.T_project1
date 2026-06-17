@@ -179,7 +179,7 @@ st.sidebar.title("💚 DUIT 메뉴")
 # 기본 목차 구성
 menu_options = ["🏠 메인 홈"]
 
-# 부장 인증 게이트 통과 시 목차에 '👑 부장 전용 관리관' 동적 추가
+# 부장 인증 게이트 통과 시 목차에만 단독 추가
 if st.session_state.boss_verified:
     menu_options.append("👑 부장 전용 관리관")
 
@@ -277,10 +277,14 @@ if selected_menu == "🏠 메인 홈":
         st.markdown('<div class="info-card"><h3>📅 동아리 연간 일정</h3>', unsafe_allow_html=True)
         st.markdown("""
         <table class="schedule-table">
-            <tr><th>월별</th><th>주요 일정 및 계획</th></tr>
-            <tr><td>03월</td><td>신입 부원 모집, 면접 및 오리엔테이션</td></tr>
-            <tr><td>05월</td><td>모의토론, 모둠탐구</td></tr>
-            <tr><td>06월</td><td>축제, 개인탐구, 홈페이지 만들기</td></tr>
+            <thead>
+                <tr><th>월별</th><th>주요 일정 및 계획</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>03월</td><td>신입 부원 모집, 면접 및 오리엔테이션</td></tr>
+                <tr><td>05월</td><td>모의토론, 모둠탐구</td></tr>
+                <tr><td>06월</td><td>축제, 개인탐구, 홈페이지 만들기</td></tr>
+            </tbody>
         </table>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -339,67 +343,68 @@ if selected_menu == "🏠 메인 홈":
                             })
                             st.toast(f"{req_id} 학번의 등록 신청이 발송되었습니다.", icon="📩")
                     else:
-                        st.error("학번 and 비밀번호를 완벽히 입력해주세요.")
-    else:
+                        st.error("학번과 비밀번호를 완벽히 입력해주세요.")
+else:
+    if selected_menu == "🏠 메인 홈":
         st.success(f"✅ 현재 {st.session_state.current_user} 계정으로 로그인되어 있습니다.")
 
-    # --- 취향 공유 섹션 ---
-    st.markdown('<div class="section-title">✨ 부원 취향 공유 ルーム</div>', unsafe_allow_html=True)
+        # --- 취향 공유 섹션 ---
+        st.markdown('<div class="section-title">✨ 부원 취향 공유 공간</div>', unsafe_allow_html=True)
 
-    if not st.session_state.logged_in:
-        st.warning("🔒 이 공간은 비공개 상태입니다. 위 메뉴에서 'DUIT 부원 인증'을 완료해야 접근할 수 있습니다.")
-    else:
-        st.write("동아리 부원들이 파트별 관심사를 공유하고 관리하는 공간입니다.")
-        
-        with st.expander("➕ 나의 취향 조각 하나 추가하기", expanded=False):
-            select_category = st.selectbox(
-                "어느 파트에 넣을 건지 선택해주세요:",
-                ["🎵 코딩 노동요", "💻 IT 장비/팁", "🍕 매점 꿀조합", "🎤 최애 아이돌"]
-            )
-            new_taste_input = st.text_input("추가하고 싶은 구체적인 관심사를 적어주세요:")
-            
-            if st.button("➕ 등록하기"):
-                if new_taste_input.strip():
-                    st.session_state.tastes_list.append({
-                        "id": st.session_state.taste_id_counter,
-                        "category": select_category,
-                        "text": new_taste_input.strip()
-                    })
-                    st.session_state.taste_id_counter += 1
-                    st.success("취향 카드가 추가되었습니다!")
-                    st.rerun()
-                    
-        st.write("") 
-        
-        if len(st.session_state.tastes_list) == 0:
-            st.info("현재 등록된 취향 카드가 없습니다.")
+        if not st.session_state.logged_in:
+            st.warning("🔒 이 공간은 비공개 상태입니다. 위 메뉴에서 'DUIT 부원 인증'을 완료해야 접근할 수 있습니다.")
         else:
-            t_col1, t_col2 = st.columns(2)
-            for index, taste_item in enumerate(st.session_state.tastes_list):
-                target_col = t_col1 if index % 2 == 0 else t_col2
-                with target_col:
-                    st.markdown(f"""
-                    <div class="taste-box">
-                        <span class="taste-tag">{taste_item['category']}</span>
-                        <div class="taste-text">✨ {taste_item['text']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    if st.button(f"🗑️ 이 취향 삭제", key=f"del_{taste_item['id']}"):
-                        st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
+            st.write("동아리 부원들이 파트별 관심사를 공유하고 관리하는 공간입니다.")
+            
+            with st.expander("➕ 나의 취향 조각 하나 추가하기", expanded=False):
+                select_category = st.selectbox(
+                    "어느 파트에 넣을 건지 선택해주세요:",
+                    ["🎵 코딩 노동요", "💻 IT 장비/팁", "🍕 매점 꿀조합", "🎤 최애 아이돌"]
+                )
+                new_taste_input = st.text_input("추가하고 싶은 구체적인 관심사를 적어주세요:")
+                
+                if st.button("➕ 등록하기"):
+                    if new_taste_input.strip():
+                        st.session_state.tastes_list.append({
+                            "id": st.session_state.taste_id_counter,
+                            "category": select_category,
+                            "text": new_taste_input.strip()
+                        })
+                        st.session_state.taste_id_counter += 1
+                        st.success("취향 카드가 추가되었습니다!")
                         st.rerun()
+                        
+            st.write("") 
+            
+            if len(st.session_state.tastes_list) == 0:
+                st.info("현재 등록된 취향 카드가 없습니다.")
+            else:
+                t_col1, t_col2 = st.columns(2)
+                for index, taste_item in enumerate(st.session_state.tastes_list):
+                    target_col = t_col1 if index % 2 == 0 else t_col2
+                    with target_col:
+                        st.markdown(f"""
+                        <div class="taste-box">
+                            <span class="taste-tag">{taste_item['category']}</span>
+                            <div class="taste-text">✨ {taste_item['text']}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        if st.button(f"🗑️ 이 취향 삭제", key=f"del_{taste_item['id']}"):
+                            st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
+                            st.rerun()
 
 
 # ==============================================================================
 # 👑 2. [완전 분리] 부장 전용 단독 마스터 제어실 페이지 렌더링 영역
 # ==============================================================================
-elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_verified:
+if selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_verified:
     
     st.title("👑 DUIT 부장 전용 관리 대시보드")
     st.write("메인 홈 화면에서 완전히 벗어난, 부장님만을 위한 비밀 독점 통제 페이지입니다.")
     st.markdown("---")
     
-    # 🔥 [핵심 기능] 이전 활동 보고 데이터(부장목록) 관리소
+    # 🚀 '이전 활동 보고' 부장목록 커스텀 편집
     st.subheader("🚀 '이전 활동 보고' 부장목록 커스텀 편집")
     
     with st.form("boss_log_add_form_final"):
