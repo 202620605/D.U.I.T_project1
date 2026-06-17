@@ -172,9 +172,10 @@ if 'board_schedule_list' not in st.session_state:
         {"month": "06월", "plan": "축제, 개인탐구, 홈페이지 만들기"}
     ]
 
-# 정식 승인 부원 목록
+# 정식 승인 부원 목록 (부장 계정 20401 기본 등록 완료)
 if 'approved_users' not in st.session_state:
     st.session_state.approved_users = {
+        "20401": "2025",  # 부장님 계정 자동 포함
         "20501": "1234",
         "10101": "1234",
         "30101": "1234"
@@ -192,16 +193,15 @@ if 'boss_log_list' not in st.session_state:
 if 'signup_queue' not in st.session_state:
     st.session_state.signup_queue = []
 
-# 취향 공유 초기 데이터 리스트
+# 취향 공유 데이터 리스트 (요청 조건 반영 카테고리 수정 및 IT 장비 제거)
 if 'tastes_list' not in st.session_state:
     st.session_state.tastes_list = [
-        {"id": 0, "category": "🎵 코딩 노동요", "text": "최애 코딩 노동요 플레이리스트 공유해요!"},
-        {"id": 1, "category": "💻 IT 장비/팁", "text": "역시 개발 키보드는 기계식 갈축이 최고인 듯"},
-        {"id": 2, "category": "🍕 매점 꿀조합", "text": "정보실 뒤편 매점 꿀조합 빵 추천합니다"},
-        {"id": 3, "category": "🎤 최애 아이돌", "text": "부실에서 코딩할 때 뉴진스 노래 들으면 능률 대박입니다"}
+        {"id": 0, "category": "🎵 최애 플레이리스트를 공유해요", "text": "최애 플레이리스트를 공유해요!"},
+        {"id": 1, "category": "🍕 매점 꿀조합", "text": "매점 꿀조합 추천합니다"},
+        {"id": 2, "category": "🎤 최애 아이돌을 공유해요", "text": "부실에서 코딩할 때 뉴진스 노래 들으면 능률 대박입니다"}
     ]
 if 'taste_id_counter' not in st.session_state:
-    st.session_state.taste_id_counter = 4
+    st.session_state.taste_id_counter = 3
 
 
 # ----------------- 💻 사이드바 목차 및 인증 제어 -----------------
@@ -215,7 +215,7 @@ if st.session_state.boss_verified:
 selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu_options)
 st.sidebar.markdown("---")
 
-# 부장 로그인 관리 (요청 반영: '관리 페이지' 및 '전권 관리 모드'로 명칭 변경)
+# 부장 로그인 관리
 if st.session_state.boss_verified:
     st.sidebar.success("👑 부장 전권 관리 모드 활성화 중")
     if st.sidebar.button("부장 모드 종료"):
@@ -373,7 +373,7 @@ if selected_menu == "🏠 메인 홈":
         with st.expander("➕ 나의 취향 조각 하나 추가하기", expanded=False):
             select_category = st.selectbox(
                 "어느 파트에 넣을 건지 선택해주세요:",
-                ["🎵 코딩 노동요", "💻 IT 장비/팁", "🍕 매점 꿀조합", "🎤 최애 아이돌"]
+                ["🎵 최애 플레이리스트를 공유해요", "🍕 매점 꿀조합", "🎤 최애 아이돌을 공유해요"]
             )
             new_taste_input = st.text_input("추가하고 싶은 구체적인 관심사를 적어주세요:")
             
@@ -410,12 +410,19 @@ if selected_menu == "🏠 메인 홈":
 
 
 # ==============================================================================
-# 👑 2. 부장 전용 단독 관리 페이지 (수정 반영 완료)
+# 👑 2. 부장 전용 단독 관리 페이지
 # ==============================================================================
 elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state.boss_verified:
     
     st.title("👑 DUIT 부장 전용 전권 관리 대시보드")
     st.write("메인 홈 화면에 노출되는 모든 레이아웃의 콘텐츠를 이곳에서 커스텀 수정할 수 있습니다.")
+    st.markdown("---")
+
+    # 👥 [신규 추가 기능] 현재 가입된 전체 부원 명단 리스트 출력소
+    st.subheader("👥 현재 정식 가입 완료된 부원 명단")
+    st.write("시스템에 승인되어 활동 중인 정식 부원 리스트입니다.")
+    user_list_text = ", ".join([f"**{uid}**" for uid in st.session_state.approved_users.keys()])
+    st.info(f"현재 등록 부원: {user_list_text}")
     st.markdown("---")
     
     # 🛠️ [1] ABOUT DUIT 칸 수정 (위치 & 과잠)
@@ -499,7 +506,7 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
             
     st.markdown("---")
     
-    # 📩 [5] 신규 부원 가입 신청 관리소
+    # 📩 [5] 신규 부원 가입 신청 관리소 (수락 누르면 부원 목록에 실시간 즉시 반영)
     st.subheader("📩 부원 가입 신청 수락/반려 제어기")
     if not st.session_state.signup_queue:
         st.info("현재 대기 중인 신규 가입 신청서가 없습니다.")
@@ -513,6 +520,7 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
                     if st.button(f"✅ 최종 승인", key=f"final_app_{req_user['id']}"):
                         st.session_state.approved_users[req_user['id']] = req_user['pw']
                         st.session_state.signup_queue.remove(req_user)
+                        st.success(f"{req_user['id']} 학번이 정식 부원으로 승인 추가되었습니다!")
                         st.rerun()
                 with r_col3:
                     if st.button(f"❌ 가입 거절", key=f"final_rej_{req_user['id']}"):
@@ -535,7 +543,7 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
                     st.toast("부장 권한으로 글 내용이 수정되었습니다.")
                 
                 if st.button("🗑️ 해당 카드 영구 파기", key=f"final_del_{t_item['id']}"):
-                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != t_item['id']]
+                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
                     st.rerun()
 
 
