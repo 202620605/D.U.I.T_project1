@@ -129,14 +129,6 @@ local_css = """
         font-size: 0.95rem;
         word-break: break-all;
     }
-    
-    .admin-box {
-        background-color: #FFF3CD;
-        border: 1px solid #FFEBAA;
-        padding: 25px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
 </style>
 """
 st.markdown(local_css, unsafe_allow_html=True)
@@ -149,7 +141,7 @@ if 'is_admin' not in st.session_state:
 if 'current_user' not in st.session_state:
     st.session_state.current_user = ""
 
-# 정식 승인 부원 목록
+# 정식 승인 부원 목록 (학번: 비밀번호)
 if 'approved_users' not in st.session_state:
     st.session_state.approved_users = {
         "20501": "1234",
@@ -157,18 +149,19 @@ if 'approved_users' not in st.session_state:
         "30101": "1234"
     }
 
-# 부장/운영진 목록 데이터
-if 'leader_list' not in st.session_state:
-    st.session_state.leader_list = [
-        {"role": "👑 동아리 부장", "name": "김다윗 (20401)"},
-        {"role": "⚡ 동아리 차장", "name": "이정보 (20415)"}
+# 이전 활동 기록용 부장목록 데이터
+if 'boss_log_list' not in st.session_state:
+    st.session_state.boss_log_list = [
+        "03월: 신입 부원 모집, 면접 및 오리엔테이션",
+        "05월: 모의토론, 모둠탐구",
+        "06월: 축제, 개인탐구, 홈페이지 만들기"
     ]
 
 # 가입 신청 대기 명단
 if 'signup_queue' not in st.session_state:
     st.session_state.signup_queue = []
 
-# 취향 공유 초기 데이터
+# 취향 공유 초기 데이터 리스트
 if 'tastes_list' not in st.session_state:
     st.session_state.tastes_list = [
         {"id": 0, "category": "🎵 코딩 노동요", "text": "최애 코딩 노동요 플레이리스트 공유해요!"},
@@ -179,10 +172,13 @@ if 'tastes_list' not in st.session_state:
 if 'taste_id_counter' not in st.session_state:
     st.session_state.taste_id_counter = 4
 
-# ----------------- 💻 사이드바 메뉴 및 권한 분리 -----------------
+# ----------------- 💻 사이드바 메뉴 (부장 전용 제한 권한) -----------------
 st.sidebar.title("💚 DUIT 메뉴")
 
+# 기본적으로는 홈만 노출
 menu_options = ["🏠 메인 홈"]
+
+# 🔥 중요: 오직 부장 세션이 참(True)일 때만 사이드바에 비밀 메뉴를 추가합니다!
 if st.session_state.is_admin:
     menu_options.append("👑 부장 전용 관리관")
 
@@ -190,7 +186,7 @@ selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu
 
 st.sidebar.markdown("---")
 if st.session_state.is_admin:
-    st.sidebar.success(f"👑 부장님 ({st.session_state.current_user}) 로그인 중")
+    st.sidebar.success("👑 부장 마스터 계정 로그인 중")
     if st.sidebar.button("부장 로그아웃"):
         st.session_state.is_admin = False
         st.session_state.logged_in = False
@@ -207,7 +203,7 @@ else:
 
 
 # ==============================================================================
-# 🏠 1. 메인 홈 페이지 화면
+# 🏠 1. [페이지 1] 메인 홈 화면 (모든 유저 공통)
 # ==============================================================================
 if selected_menu == "🏠 메인 홈":
 
@@ -250,7 +246,7 @@ if selected_menu == "🏠 메인 홈":
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 동아리 게시판 섹션 (부서 / 일정 / 임원진 목록) ---
+    # --- 동아리 게시판 섹션 (부서 / 일정 / 이전 활동 보고 완벽 유지) ---
     st.markdown('<div class="section-title">동아리 게시판</div>', unsafe_allow_html=True)
     b_col1, b_col2, b_col3 = st.columns(3)
 
@@ -280,10 +276,15 @@ if selected_menu == "🏠 메인 홈":
         st.markdown('</div>', unsafe_allow_html=True)
 
     with b_col3:
-        st.markdown('<div class="info-card"><h3>👑 DUIT 운영진 명단</h3>', unsafe_allow_html=True)
-        for leader in st.session_state.leader_list:
-            st.markdown(f"• **{leader['role']}**: {leader['name']}")
-        st.markdown('<p style="color:#666; font-size:0.85rem; margin-top:15px;">※ 임원진 명단 수정은 부장 전용 관리관 메뉴에서 가능합니다.</p>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="info-card">
+            <h3>🚀 이전 활동 보고</h3>
+            <h4 style="color:#222; margin-top:5px; margin-bottom:8px;">연간 핵심 일정 기록</h4>
+        """, unsafe_allow_html=True)
+        
+        for log_item in st.session_state.boss_log_list:
+            st.markdown(f"• {log_item}")
+            
         st.markdown('</div>', unsafe_allow_html=True)
 
     # --- 로그인 / 회원가입 섹션 ---
@@ -292,18 +293,19 @@ if selected_menu == "🏠 메인 홈":
     if not st.session_state.logged_in:
         auth_col1, auth_col2 = st.columns([1, 1])
         with auth_col1:
-            st.info("💡 6번 '취향 공유' 공간은 DUIT 정식 부원 전용 기능입니다.")
+            st.info("💡 '취향 공유' 공간은 DUIT 정식 부원 전용 기능입니다.")
             with st.form("login_form"):
                 user_id = st.text_input("학번 (아이디)", placeholder="예: 20501")
                 user_pw = st.text_input("비밀번호", type="password")
                 submitted = st.form_submit_button("인증하기")
                 
                 if submitted:
+                    # 👑 부장 로그인 정보 (맞춤 검증)
                     if user_id == "20401" and user_pw == "2025":
                         st.session_state.is_admin = True
                         st.session_state.logged_in = True
                         st.session_state.current_user = "부장"
-                        st.success("👑 부장님 환영합니다! 왼쪽 메뉴에서 관리자 페이지를 이용하실 수 있습니다.")
+                        st.success("👑 부장님 인증 완료! 이제 왼쪽 메뉴에 전용 관리 페이지가 나타납니다.")
                         st.rerun()
                     elif user_id in st.session_state.approved_users and st.session_state.approved_users[user_id] == user_pw:
                         st.session_state.logged_in = True
@@ -311,7 +313,7 @@ if selected_menu == "🏠 메인 홈":
                         st.success(f"🎉 {user_id} 부원님 인증 성공!")
                         st.rerun()
                     else:
-                        st.error("등록되지 않은 학번이거나 비밀번호가 올바르지 않습니다.")
+                        st.error("학번이 없거나 비밀번호가 올바르지 않습니다.")
                         
         with auth_col2:
             with st.form("signup_form"):
@@ -333,10 +335,12 @@ if selected_menu == "🏠 메인 홈":
                             })
                             st.toast(f"{req_id} 학번의 등록 신청이 발송되었습니다.", icon="📩")
                     else:
-                        st.error("학번과 비밀번호를 모두 기입한 후 신청해주세요.")
+                        st.error("학번과 비밀번호를 완벽히 입력해주세요.")
     else:
-        status_msg = "👑 부장 권한으로 로그인 중입니다. 사이드바 메뉴에서 관리관으로 진입할 수 있습니다." if st.session_state.is_admin else f"✅ {st.session_state.current_user} 정식 부원 계정으로 로그인 중입니다."
-        st.success(status_msg)
+        if st.session_state.is_admin:
+            st.success("👑 부장 권한으로 완벽 접속 중입니다. 왼쪽 메뉴에서 시크릿 대시보드를 열어주세요.")
+        else:
+            st.success(f"✅ 정식 부원 계정({st.session_state.current_user})으로 로그인 중입니다.")
 
     # --- 취향 공유 섹션 ---
     st.markdown('<div class="section-title">✨ 부원 취향 공유 룸</div>', unsafe_allow_html=True)
@@ -351,10 +355,7 @@ if selected_menu == "🏠 메인 홈":
                 "어느 파트에 넣을 건지 선택해주세요:",
                 ["🎵 코딩 노동요", "💻 IT 장비/팁", "🍕 매점 꿀조합", "🎤 최애 아이돌"]
             )
-            new_taste_input = st.text_input(
-                "추가하고 싶은 구체적인 관심사를 적어주세요:", 
-                placeholder="추천 내용을 입력해 주세요"
-            )
+            new_taste_input = st.text_input("추가하고 싶은 구체적인 관심사를 적어주세요:")
             
             if st.button("➕ 등록하기"):
                 if new_taste_input.strip():
@@ -366,8 +367,6 @@ if selected_menu == "🏠 메인 홈":
                     st.session_state.taste_id_counter += 1
                     st.success("취향 카드가 추가되었습니다!")
                     st.rerun()
-                else:
-                    st.error("내용을 입력해주세요.")
                     
         st.write("") 
         
@@ -375,10 +374,8 @@ if selected_menu == "🏠 메인 홈":
             st.info("현재 등록된 취향 카드가 없습니다.")
         else:
             t_col1, t_col2 = st.columns(2)
-            
             for index, taste_item in enumerate(st.session_state.tastes_list):
                 target_col = t_col1 if index % 2 == 0 else t_col2
-                
                 with target_col:
                     st.markdown(f"""
                     <div class="taste-box">
@@ -391,75 +388,80 @@ if selected_menu == "🏠 메인 홈":
                         st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
                         st.rerun()
 
+
 # ==============================================================================
-# 👑 2. 부장 전용 비밀 관리 페이지 화면
+# 👑 2. [페이지 2] 오직 부장만 따로 들어올 수 있는 비밀 관리 페이지
 # ==============================================================================
-elif selected_menu == "👑 부장 전용 관리관":
+elif selected_menu == "👑 부장 전용 관리관" and st.session_state.is_admin:
     
-    st.title("👑 DUIT 부장 마스터 대시보드")
-    st.write("부장전용 독립 메뉴입니다. 회원 승인, 부원 글 편집, 임원진 명단 관리가 가능합니다.")
+    st.title("👑 DUIT 부장 전용 마스터 관리관")
+    st.write("사이드바 메뉴에서 철저히 분리된 부장님만의 단독 통제실 공간입니다.")
     st.markdown("---")
     
-    # [파트 1: 부장/임원 목록 편집 기능]
-    st.subheader("📝 메인 화면 부장 및 임원 명단 편집")
-    with st.form("leader_edit_form"):
-        st.write("메인 홈 동아리 게시판에 표시되는 임원 정보를 수정합니다.")
-        leader_name = st.text_input("부장 이름 및 학번 수정:", value=st.session_state.leader_list[0]["name"])
-        sub_leader_name = st.text_input("차장 이름 및 학번 수정:", value=st.session_state.leader_list[1]["name"])
-        save_leader = st.form_submit_button("💾 명단 저장 및 메인 홈 반영")
+    # [파트 1: 이전 활동 보고 데이터(부장목록) 유동적 제어]
+    st.subheader("🚀 메인 홈 '이전 활동 보고' 데이터 실시간 수정기")
+    
+    with st.form("boss_log_add_form"):
+        st.write("메인 홈 화면에 새로운 활동 기록 한 줄을 추가합니다.")
+        input_log = st.text_input("추가할 내역 입력 (예: '07월: 교내 컴퓨터 경진대회 스태프'):")
+        add_log_btn = st.form_submit_button("➕ 메인 화면에 즉시 등록")
         
-        if save_leader:
-            st.session_state.leader_list[0]["name"] = leader_name.strip()
-            st.session_state.leader_list[1]["name"] = sub_leader_name.strip()
-            st.success("임원진 목록이 성공적으로 업데이트되었습니다!")
-            st.toast("메인 홈 명단이 갱신되었습니다.")
+        if add_log_btn and input_log.strip():
+            st.session_state.boss_log_list.append(input_log.strip())
+            st.success("메인 홈 이전 활동 보고에 성공적으로 저장되었습니다!")
+            st.rerun()
+
+    st.write("**현재 출력 중인 리스트 내용 (클릭 시 완전 제거):**")
+    for idx, log_text in enumerate(st.session_state.boss_log_list):
+        cl1, cl2 = st.columns([5, 1])
+        cl1.info(log_text)
+        if cl2.button("🗑️ 제거", key=f"remove_log_{idx}"):
+            st.session_state.boss_log_list.pop(idx)
+            st.rerun()
             
     st.markdown("---")
     
     # [파트 2: 신규 가입 회원 신청 목록]
-    st.subheader("📩 신규 회원 가입 및 비밀번호 승인 관리")
+    st.subheader("📩 신규 부원 가입 신청 관리소")
     
     if not st.session_state.signup_queue:
-        st.info("현재 대기 중인 신규 가입 신청자가 없습니다.")
+        st.info("현재 승인을 기다리고 있는 대기 학생이 없습니다.")
     else:
         for req_user in st.session_state.signup_queue:
             with st.container():
                 r_col1, r_col2, r_col3 = st.columns([2, 1, 1])
                 with r_col1:
-                    st.warning(f"👤 신청 학번: **{req_user['id']}** | 설정 비밀번호: ` {req_user['pw']} `")
+                    st.warning(f"👤 가입 희망 학번: **{req_user['id']}** | 신청 비밀번호: `{req_user['pw']}`")
                 with r_col2:
-                    if st.button(f"✅ 회원 등록 승인", key=f"admin_app_{req_user['id']}"):
+                    if st.button(f"✅ 회원 승인", key=f"admin_app_{req_user['id']}"):
                         st.session_state.approved_users[req_user['id']] = req_user['pw']
                         st.session_state.signup_queue.remove(req_user)
-                        st.toast(f"{req_user['id']} 학생이 정식 데이터베이스에 부원으로 합류했습니다.")
                         st.rerun()
                 with r_col3:
-                    if st.button(f"❌ 신청 즉시 삭제", key=f"admin_rej_{req_user['id']}"):
+                    if st.button(f"❌ 가입 반려", key=f"admin_rej_{req_user['id']}"):
                         st.session_state.signup_queue.remove(req_user)
-                        st.toast("가입 요청서가 폐기되었습니다.")
                         st.rerun()
                         
     st.markdown("---")
     
     # [파트 3: 모든 부원들의 취향 총괄 수정/삭제]
-    st.subheader("🛠️ 전체 부원 취향 게시글 마스터 편집기")
-    st.write("현재 학생들이 작성해 둔 모든 카드를 실시간으로 강제 수정하거나 검열하여 삭제할 수 있습니다.")
+    st.subheader("🛠️ 부원 취향 게시글 전체 검열/편집기")
     
     if len(st.session_state.tastes_list) == 0:
-        st.write("수정할 카드가 존재하지 않습니다.")
+        st.write("부원들이 작성한 카드가 존재하지 않습니다.")
     else:
         for t_item in st.session_state.tastes_list:
-            with st.expander(f"⚙️ [{t_item['category']}] 카드 ID: {t_item['id']} - 편집창"):
-                edit_input = st.text_input(f"내용 수정창 (ID: {t_item['id']})", value=t_item['text'], key=f"master_edit_{t_item['id']}")
+            with st.expander(f"⚙️ [{t_item['category']}] 카드 ID: {t_item['id']} 내용 관리"):
+                edit_input = st.text_input("글 내용 수정", value=t_item['text'], key=f"master_edit_{t_item['id']}")
                 
                 if edit_input != t_item['text'] and edit_input.strip():
                     t_item['text'] = edit_input.strip()
-                    st.toast("부장 권한으로 텍스트가 강제 수정되었습니다.")
+                    st.toast("부장 권한으로 텍스트가 강제 변경되었습니다.")
                 
-                if st.button("🗑️ 이 카드 완전 삭제", key=f"master_del_{t_item['id']}"):
+                if st.button("🗑️ 이 카드 영구 삭제", key=f"master_del_{t_item['id']}"):
                     st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != t_item['id']]
-                    st.success("해당 부원의 글을 완전히 삭제처리 했습니다.")
                     st.rerun()
+
 
 # [공통 푸터 영역]
 st.markdown("""
