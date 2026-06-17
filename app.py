@@ -944,13 +944,13 @@ else:
     st.success("✅ 현재 DUIT 부원 계정으로 정상 로그인되어 있습니다.")
 
 
-# --- 6. 취향 공유 섹션 (파트 선택, 최애 아이돌 추가 및 삭제 기능 구현) ---
+# --- 6. 취향 공유 섹션 ---
 st.markdown('<div class="section-title">✨ 부원 취향 공유 룸</div>', unsafe_allow_html=True)
 
 if not st.session_state.logged_in:
     st.warning("🔒 이 공간은 비공개 상태입니다. 5번 메뉴에서 'DUIT 부원 인증'을 완료해야 접근할 수 있습니다.")
 else:
-    st.write("동아리 부원들이 파트별 관심사(노동요, 장비, 매점 메뉴, 최애 아이돌 목록 등)를 공유하고 관리하는 공간입니다.")
+    st.write("동아리 부원들이 파트별 관심사를 공유하고 관리하는 공간입니다.")
     
     # ➕ 취향 등록 인터페이스 (파트 선택 및 추가할 관심사 세분화)
     with st.expander("➕ 나의 취향 조각 하나 추가하기", expanded=False):
