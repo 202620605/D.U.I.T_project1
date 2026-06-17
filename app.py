@@ -133,13 +133,44 @@ local_css = """
 """
 st.markdown(local_css, unsafe_allow_html=True)
 
-# ----------------- 🧠 데이터 세션 관리 -----------------
+# ----------------- 🧠 데이터 세션 관리 (기본 정보 초기화) -----------------
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'current_user' not in st.session_state:
     st.session_state.current_user = ""
 if 'boss_verified' not in st.session_state:
     st.session_state.boss_verified = False
+
+# [부장 수정 가능 데이터 1] ABOUT DUIT 영역
+if 'about_location_title' not in st.session_state:
+    st.session_state.about_location_title = "잠실여자고등학교 2층 정보실"
+if 'about_location_desc' not in st.session_state:
+    st.session_state.about_location_desc = "정규활동 및 동아리 부원들의 프로젝트 연구를 위해 주로 모이는 공간입니다."
+
+if 'about_jacket_base' not in st.session_state:
+    st.session_state.about_jacket_base = "깊이감 있는 이화그린"
+if 'about_jacket_point' not in st.session_state:
+    st.session_state.about_jacket_point = "산뜻한 연두색"
+if 'about_jacket_img_text' not in st.session_state:
+    st.session_state.about_jacket_img_text = "과잠 이미지 시각화 준비 중"
+
+# [부장 수정 가능 데이터 2] 동아리 게시판 - 부서 소개 영역
+if 'board_dept_intro' not in st.session_state:
+    st.session_state.board_dept_intro = "2026학년도 기준 정예 인원으로 운영됩니다."
+if 'board_dept_list' not in st.session_state:
+    st.session_state.board_dept_list = [
+        "💻 프로그래밍부: 웹/앱 서비스 빌드 및 알고리즘 개발",
+        "🛡️ 보안부: 웹 해킹 기초 아키텍처 및 시스템 보안 스터디",
+        "🤖 AI부: 인공지능 API 응용 및 빅데이터 수집/분석"
+    ]
+
+# [부장 수정 가능 데이터 3] 동아리 게시판 - 연간 일정 영역
+if 'board_schedule_list' not in st.session_state:
+    st.session_state.board_schedule_list = [
+        {"month": "03월", "plan": "신입 부원 모집, 면접 및 오리엔테이션"},
+        {"month": "05월", "plan": "모의토론, 모둠탐구"},
+        {"month": "06월", "plan": "축제, 개인탐구, 홈페이지 만들기"}
+    ]
 
 # 정식 승인 부원 목록
 if 'approved_users' not in st.session_state:
@@ -149,7 +180,7 @@ if 'approved_users' not in st.session_state:
         "30101": "1234"
     }
 
-# 부장목록 데이터 (이전 활동 보고 리스트)
+# 이전 활동 보고 리스트
 if 'boss_log_list' not in st.session_state:
     st.session_state.boss_log_list = [
         "03월: 신입 부원 모집, 면접 및 오리엔테이션",
@@ -176,10 +207,9 @@ if 'taste_id_counter' not in st.session_state:
 # ----------------- 💻 사이드바 목차 및 인증 제어 -----------------
 st.sidebar.title("💚 DUIT 메뉴")
 
-# 기본 목차 구성
 menu_options = ["🏠 메인 홈"]
 
-# 부장 인증 게이트 통과 시 목차에만 단독 추가
+# 부장 인증 완료 시 목차 오픈
 if st.session_state.boss_verified:
     menu_options.append("👑 부장 전용 관리관")
 
@@ -187,14 +217,14 @@ selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu
 
 st.sidebar.markdown("---")
 
-# 부장 로그인 로직 관리
+# 부장 로그인 로직 관리 ('게이트' 단어 전면 제거)
 if st.session_state.boss_verified:
     st.sidebar.success("👑 부장 마스터 모드 활성화 중")
     if st.sidebar.button("부장 모드 종료"):
         st.session_state.boss_verified = False
         st.rerun()
 else:
-    st.sidebar.markdown("### 🔑 부장 인증 게이트")
+    st.sidebar.markdown("### 🔑 부장 인증 관리")
     boss_pwd_input = st.sidebar.text_input("마스터 패스워드 입력:", type="password", placeholder="비밀번호 입력 시 목차 오픈")
     if boss_pwd_input == "2025":
         st.session_state.boss_verified = True
@@ -233,61 +263,53 @@ if selected_menu == "🏠 메인 홈":
     </div>
     """, unsafe_allow_html=True)
 
-    # --- ABOUT DUIT 섹션 ---
+    # --- ABOUT DUIT 섹션 (부장 데이터 동적 연동) ---
     st.markdown('<div class="section-title">ABOUT DUIT</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-card">
             <h3>📍 위치</h3>
-            <p><b>잠실여자고등학교 2층 정보실</b></p>
-            <p style="color:#666; font-size:0.95rem; line-height:1.4;">정규활동 및 동아리 부원들의 프로젝트 연구를 위해 주로 모이는 공간입니다.</p>
+            <p><b>{st.session_state.about_location_title}</b></p>
+            <p style="color:#666; font-size:0.95rem; line-height:1.4;">{st.session_state.about_location_desc}</p>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-card">
             <h3>🧥 과잠 디자인</h3>
-            <p><b>메인 베이스:</b> 깊이감 있는 이화그린</p>
-            <p><b>자수/포인트:</b> 산뜻한 연두색</p>
-            <div class="jacket-box">과잠 이미지 시각화 준비 중</div>
+            <p><b>메인 베이스:</b> {st.session_state.about_jacket_base}</p>
+            <p><b>자수/포인트:</b> {st.session_state.about_jacket_point}</p>
+            <div class="jacket-box">{st.session_state.about_jacket_img_text}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 동아리 게시판 섹션 (부서 / 일정 / 부장 목록 기반 활동 보고) ---
+    # --- 동아리 게시판 섹션 (부장 데이터 동적 연동) ---
     st.markdown('<div class="section-title">동아리 게시판</div>', unsafe_allow_html=True)
     b_col1, b_col2, b_col3 = st.columns(3)
 
     with b_col1:
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-card">
             <h3>👥 부서 소개 (총 인원: 21명)</h3>
-            <p style="font-size:0.95rem; color:#444; margin-bottom:8px;">2026학년도 기준 정예 인원으로 운영됩니다.</p>
+            <p style="font-size:0.95rem; color:#444; margin-bottom:8px;">{st.session_state.board_dept_intro}</p>
             <ul>
-                <li>💻 <b>프로그래밍부</b>: 웹/앱 서비스 빌드 및 알고리즘 개발</li>
-                <li>🛡️ <b>보안부</b>: 웹 해킹 기초 아키텍처 및 시스템 보안 스터디</li>
-                <li>🤖 <b>AI부</b>: 인공지능 API 응용 및 빅데이터 수집/분석</li>
+        """, unsafe_allow_html=True)
+        for dept in st.session_state.board_dept_list:
+            st.markdown(f"<li>{dept}</li>", unsafe_allow_html=True)
+        st.markdown("""
             </ul>
         </div>
         """, unsafe_allow_html=True)
 
     with b_col2:
         st.markdown('<div class="info-card"><h3>📅 동아리 연간 일정</h3>', unsafe_allow_html=True)
-        st.markdown("""
-        <table class="schedule-table">
-            <thead>
-                <tr><th>월별</th><th>주요 일정 및 계획</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>03월</td><td>신입 부원 모집, 면접 및 오리엔테이션</td></tr>
-                <tr><td>05월</td><td>모의토론, 모둠탐구</td></tr>
-                <tr><td>06월</td><td>축제, 개인탐구, 홈페이지 만들기</td></tr>
-            </tbody>
-        </table>
-        """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<table class="schedule-table"><thead><tr><th>월별</th><th>주요 일정 및 계획</th></tr></thead><tbody>', unsafe_allow_html=True)
+        for sched in st.session_state.board_schedule_list:
+            st.markdown(f"<tr><td>{sched['month']}</td><td>{sched['plan']}</td></tr>", unsafe_allow_html=True)
+        st.markdown('</tbody></table></div>', unsafe_allow_html=True)
 
     with b_col3:
         st.markdown("""
@@ -295,11 +317,8 @@ if selected_menu == "🏠 메인 홈":
             <h3>🚀 이전 활동 보고</h3>
             <h4 style="color:#222; margin-top:5px; margin-bottom:8px;">연간 핵심 일정 기록</h4>
         """, unsafe_allow_html=True)
-        
-        # 부장님이 전용 페이지에서 제어하는 실시간 부장목록 리스트 출력
         for log_item in st.session_state.boss_log_list:
             st.markdown(f"• {log_item}")
-            
         st.markdown('</div>', unsafe_allow_html=True)
 
     # --- 로그인 / 회원가입 섹션 ---
@@ -396,38 +415,96 @@ else:
 
 
 # ==============================================================================
-# 👑 2. [완전 분리] 부장 전용 단독 마스터 제어실 페이지 렌더링 영역
+# 👑 2. [완전 분리] 부장 전용 단독 마스터 마스터룸 (전체 칸 수정 권한 부여)
 # ==============================================================================
-if selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_verified:
+elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_verified:
     
-    st.title("👑 DUIT 부장 전용 관리 대시보드")
-    st.write("메인 홈 화면에서 완전히 벗어난, 부장님만을 위한 비밀 독점 통제 페이지입니다.")
+    st.title("👑 DUIT 부장 전용 만능 마스터 제어 센터")
+    st.write("메인 홈 화면에 노출되는 모든 카드 레이아웃의 콘텐츠를 이곳에서 커스텀 수정할 수 있습니다.")
     st.markdown("---")
     
-    # 🚀 '이전 활동 보고' 부장목록 커스텀 편집
-    st.subheader("🚀 '이전 활동 보고' 부장목록 커스텀 편집")
-    
-    with st.form("boss_log_add_form_final"):
-        st.write("텍스트를 입력하면 메인 홈 [이전 활동 보고] 게시판 목록에 즉시 동적 추가됩니다.")
-        input_log = st.text_input("추가할 내역을 작성하세요 (예: '07월: 동아리 해커톤 대회 개최'):")
-        add_log_btn = st.form_submit_button("➕ 메인 홈 리스트에 등록")
-        
-        if add_log_btn and input_log.strip():
-            st.session_state.boss_log_list.append(input_log.strip())
-            st.success("성공적으로 추가되었습니다! 메인 홈 화면에서 확인 가능합니다.")
+    # 🛠️ [1] ABOUT DUIT 칸 수정 (위치 & 과잠)
+    st.subheader("📍 [ABOUT DUIT] 위치 및 과잠 칸 콘텐츠 수정")
+    with st.form("about_edit_form"):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("#### **위치 정보 컴포넌트**")
+            loc_title = st.text_input("위치 메인 제목", value=st.session_state.about_location_title)
+            loc_desc = st.text_area("위치 세부 설명", value=st.session_state.about_location_desc)
+        with c2:
+            st.markdown("#### **과잠 디자인 컴포넌트**")
+            jkt_base = st.text_input("메인 베이스 색상", value=st.session_state.about_jacket_base)
+            jkt_point = st.text_input("자수/포인트 색상", value=st.session_state.about_jacket_point)
+            jkt_img_text = st.text_input("이미지 박스 대체 문구", value=st.session_state.about_jacket_img_text)
+            
+        if st.form_submit_button("💾 ABOUT DUIT 내용 일괄 업데이트"):
+            st.session_state.about_location_title = loc_title
+            st.session_state.about_location_desc = loc_desc
+            st.session_state.about_jacket_base = jkt_base
+            st.session_state.about_jacket_point = jkt_point
+            st.session_state.about_jacket_img_text = jkt_img_text
+            st.success("ABOUT DUIT 정보가 완전히 변경되었습니다. 메인 홈을 확인하세요!")
             st.rerun()
 
-    st.write("**현재 메인 홈에 표시 중인 활동 목록 (클릭하면 즉시 실시간 삭제):**")
+    st.markdown("---")
+
+    # 🛠️ [2] 부서 소개 칸 수정
+    st.subheader("👥 [동아리 게시판] 부서 소개 칸 수정")
+    with st.form("dept_edit_form"):
+        dept_intro = st.text_input("부서 설명 요약문", value=st.session_state.board_dept_intro)
+        st.write("**현재 등록된 하위 부서 리스트:**")
+        
+        d0 = st.text_input("부서 1", value=st.session_state.board_dept_list[0])
+        d1 = st.text_input("부서 2", value=st.session_state.board_dept_list[1])
+        d2 = st.text_input("부서 3", value=st.session_state.board_dept_list[2])
+        
+        if st.form_submit_button("💾 부서 소개 정보 업데이트"):
+            st.session_state.board_dept_intro = dept_intro
+            st.session_state.board_dept_list = [d0, d1, d2]
+            st.success("부서 소개 내용이 변경되었습니다!")
+            st.rerun()
+
+    st.markdown("---")
+
+    # 🛠️ [3] 연간 일정 칸 수정
+    st.subheader("📅 [동아리 게시판] 연간 일정 표 데이터 수정")
+    with st.form("schedule_edit_form"):
+        st.write("메인 홈 연간 일정 표 테이블에 들어갈 월별 일정 데이터입니다.")
+        updated_schedules = []
+        for idx, sched in enumerate(st.session_state.board_schedule_list):
+            sc_c1, sc_c2 = st.columns([1, 4])
+            m_val = sc_c1.text_input(f"월 정보 ({idx+1}행)", value=sched['month'], key=f"m_key_{idx}")
+            p_val = sc_c2.text_input(f"계획 및 일정 ({idx+1}행)", value=sched['plan'], key=f"p_key_{idx}")
+            updated_schedules.append({"month": m_val, "plan": p_val})
+            
+        if st.form_submit_button("💾 연간 일정 표 즉시 변경"):
+            st.session_state.board_schedule_list = updated_schedules
+            st.success("연간 일정 표 디자인 내부 데이터가 전면 수정되었습니다!")
+            st.rerun()
+
+    st.markdown("---")
+    
+    # 🚀 [4] 이전 활동 보고 데이터(부장목록) 커스텀 편집
+    st.subheader("🚀 '이전 활동 보고' 목록 추가 및 삭제")
+    with st.form("boss_log_add_form_final"):
+        input_log = st.text_input("추가할 내역을 작성하세요 (예: '07월: 동아리 해커톤 대회 개최'):")
+        add_log_btn = st.form_submit_button("➕ 이전 활동 보고 추가")
+        if add_log_btn and input_log.strip():
+            st.session_state.boss_log_list.append(input_log.strip())
+            st.success("활동 보고 리스트에 성공적으로 추가되었습니다!")
+            st.rerun()
+
+    st.write("**현재 등록된 활동 목록 (클릭 시 실시간 삭제):**")
     for idx, log_text in enumerate(st.session_state.boss_log_list):
         cl1, cl2 = st.columns([6, 1])
         cl1.info(log_text)
-        if cl2.button("🗑️ 즉시 삭제", key=f"final_remove_log_{idx}"):
+        if cl2.button("🗑️ 삭제", key=f"final_remove_log_{idx}"):
             st.session_state.boss_log_list.pop(idx)
             st.rerun()
             
     st.markdown("---")
     
-    # 📩 신규 부원 가입 신청 관리소
+    # 📩 [5] 신규 부원 가입 신청 관리소
     st.subheader("📩 부원 가입 신청 수락/반려 제어기")
     if not st.session_state.signup_queue:
         st.info("현재 대기 중인 신규 가입 신청서가 없습니다.")
@@ -449,7 +526,7 @@ if selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_ver
                         
     st.markdown("---")
     
-    # 🛠️ 모든 부원들의 취향 총괄 검열 관리
+    # 🛠️ [6] 모든 부원들의 취향 총괄 검열 관리
     st.subheader("🛠️ 전체 부원 취향 조각 마스터 통제소")
     if len(st.session_state.tastes_list) == 0:
         st.info("부원들이 등록한 취향 카드가 비어있습니다.")
