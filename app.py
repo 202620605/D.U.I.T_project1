@@ -1,6 +1,6 @@
 import streamlit as st
 
-# 페이지 기본 설정 (웹 브라우저 탭에 표시될 정보)
+# 페이지 기본 설정
 st.set_page_config(
     page_title="DUIT - 잠실여고 동아리 소개",
     page_icon="💻",
@@ -9,17 +9,14 @@ st.set_page_config(
 )
 
 # ----------------- 🎨 스타일 및 색상 디자인 (CSS 통합) -----------------
-# 메인색상: 이화그린(#00664F) | 글자/배경: 연회색(#F5F5F5) | 포인트: 연두(#A3D977)
 local_css = """
 <style>
-    /* 전체 앱 배경색 및 기본 텍스트 톤 조절 */
     .stApp {
         background-color: #F5F5F5;
         color: #222222;
         font-family: 'Pretendard', -apple-system, sans-serif;
     }
     
-    /* 1. 상단 대형 헤더 배너 */
     .main-header {
         background-color: #00664F;
         padding: 30px;
@@ -46,7 +43,6 @@ local_css = """
         font-size: 1.1rem;
     }
     
-    /* 각 메뉴의 왼쪽 세로 포인트 라인 */
     .section-title {
         color: #00664F;
         font-size: 1.8rem;
@@ -57,7 +53,6 @@ local_css = """
         margin-bottom: 20px;
     }
     
-    /* 구조 보정용 흰색 박스 카드 */
     .info-card {
         background-color: #FFFFFF;
         padding: 25px;
@@ -71,7 +66,6 @@ local_css = """
         margin-bottom: 12px;
     }
     
-    /* 과잠 가상 박스 */
     .jacket-box {
         background-color: #00664F;
         color: #A3D977;
@@ -84,7 +78,6 @@ local_css = """
         margin-top: 10px;
     }
     
-    /* 게시판 테이블 디자인 */
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
@@ -103,32 +96,48 @@ local_css = """
     }
     
     /* 부원들이 등록한 취향 박스 디자인 */
-    .taste-card {
+    .taste-box {
         background-color: #FFFFFF;
-        padding: 20px;
+        padding: 15px;
         border-radius: 8px;
         border: 2px dashed #00664F;
-        text-align: center;
-        font-weight: bold;
         color: #00664F;
         margin-bottom: 15px;
+        position: relative;
+    }
+    .taste-tag {
+        display: inline-block;
+        background-color: #00664F;
+        color: white;
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
+    .taste-text {
+        font-weight: bold;
+        font-size: 0.95rem;
+        word-break: break-all;
     }
 </style>
 """
 st.markdown(local_css, unsafe_allow_html=True)
 
 # ----------------- 🧠 메모리/세션 데이터 관리 (파이썬 기능) -----------------
-# 로그인 상태 관리
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-# 등록된 취향 리스트 배열
-if 'tastes' not in st.session_state:
-    st.session_state.tastes = [
-        "🎵 최애 코딩 노동요 플레이리스트 공유해요!",
-        "💻 역시 개발 키보드는 기계식 갈축이 최고인 듯",
-        "🍕 정보실 뒤편 매점 꿀조합 빵 추천합니다"
+# 취향 데이터를 딕셔너리 구조(id, 카테고리, 내용)로 관리하여 삭제 및 정렬이 가능하도록 개선
+if 'tastes_list' not in st.session_state:
+    st.session_state.tastes_list = [
+        {"id": 0, "category": "🎵 코딩 노동요", "text": "최애 코딩 노동요 플레이리스트 공유해요!"},
+        {"id": 1, "category": "💻 IT 장비/팁", "text": "역시 개발 키보드는 기계식 갈축이 최고인 듯"},
+        {"id": 2, "category": "🍕 매점 꿀조합", "text": "정보실 뒤편 매점 꿀조합 빵 추천합니다"},
+        {"id": 3, "category": "🎤 최애 아이돌", "text": "부실에서 코딩할 때 뉴진스 노래 들으면 능률 대박입니다"}
     ]
+if 'taste_id_counter' not in st.session_state:
+    st.session_state.taste_id_counter = 4
 
 # ----------------- 💻 웹페이지 콘텐츠 구현 시작 -----------------
 
@@ -186,7 +195,7 @@ with col3:
     """, unsafe_allow_html=True)
 
 
-# --- 3 & 4. 게시판 섹션 ---
+# --- 3 & 4. 게시판 섹션 (10월, 12월 삭제 및 문구 수정) ---
 st.markdown('<div class="section-title">동아리 게시판</div>', unsafe_allow_html=True)
 b_col1, b_col2, b_col3 = st.columns(3)
 
@@ -210,9 +219,7 @@ with b_col2:
         <tr><th>월별</th><th>주요 일정 및 계획</th></tr>
         <tr><td>03월</td><td>신입 부원 모집, 면접 및 오리엔테이션</td></tr>
         <tr><td>05월</td><td>모의토론, 모둠탐구</td></tr>
-        <tr><td>06월</td><td>축제와 개인탐구, 홈페이지 만들기</td></tr>
-        <tr><td>10월</td><td>학교 축제 동아리 체험 부스 기획 및 운영</td></tr>
-        <tr><td>12월</td><td>최종 성과 공유 아카이빙 및 피드백</td></tr>
+        <tr><td>06월</td><td>축제, 개인탐구, 홈페이지 만들기</td></tr>
     </table>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -224,10 +231,8 @@ with b_col3:
         <h4 style="color:#222; margin-top:5px; margin-bottom:8px;">[활동로그] 연간 핵심 일정 기록</h4>
         <p style="color:#555; font-size:0.93rem; line-height:1.5;">
             • <b>03월</b>: 신입 부원 모집, 면접 및 오리엔테이션<br>
-            • <b>05월</b>: 모의토론 및 모둠탐구 실시<br>
-            • <b>06월</b>: 축제와 개인탐구, 홈페이지 만들기 완료<br>
-            • <b>10월</b>: 학교 축제 동아리 체험 부스 기획 및 운영<br>
-            • <b>12월</b>: 최종 성과 공유 아카이빙 및 피드백 완료
+            • <b>05월</b>: 모의토론, 모둠탐구<br>
+            • <b>06월</b>: 축제, 개인탐구, 홈페이지 만들기
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -246,7 +251,7 @@ if not st.session_state.logged_in:
             submitted = st.form_submit_button("부원 인증하기")
             
             if submitted:
-                if user_id and user_pw: # 아이디/비번 칸이 비어있지 않으면 통과하도록 기본 구현
+                if user_id and user_pw:
                     st.session_state.logged_in = True
                     st.success("🎉 인증에 성공했습니다! 스크롤을 내려 취향 공유 기능을 이용하세요.")
                     st.rerun()
@@ -265,36 +270,70 @@ else:
     st.success("✅ 현재 DUIT 부원 계정으로 정상 로그인되어 있습니다.")
 
 
-# --- 6. 취향 공유 섹션 ---
+# --- 6. 취향 공유 섹션 (파트 선택, 최애 아이돌 추가 및 삭제 기능 구현) ---
 st.markdown('<div class="section-title">✨ 부원 취향 공유 룸</div>', unsafe_allow_html=True)
 
 if not st.session_state.logged_in:
     st.warning("🔒 이 공간은 비공개 상태입니다. 5번 메뉴에서 'DUIT 부원 인증'을 완료해야 접근할 수 있습니다.")
 else:
-    st.write("동아리 부원들이 서로 좋아하는 IT 장비, 음악, 팁들을 자유롭게 공유하고 실시간으로 추가하는 공간입니다.")
+    st.write("동아리 부원들이 파트별 관심사(노동요, 장비, 매점 메뉴, 최애 아이돌 목록 등)를 공유하고 관리하는 공간입니다.")
     
+    # ➕ 취향 등록 인터페이스 (파트 선택 및 추가할 관심사 세분화)
     with st.expander("➕ 나의 취향 조각 하나 추가하기", expanded=False):
-        new_taste_input = st.text_input("공유할 취향 문장을 적어주세요:", placeholder="예: 저는 파이썬으로 인공지능 모델 다룰 때가 제일 재밌어요!")
+        # 1. 파트(카테고리) 선택 상자
+        select_category = st.selectbox(
+            "어느 파트에 넣을 건지 선택해주세요:",
+            ["🎵 코딩 노동요", "💻 IT 장비/팁", "🍕 매점 꿀조합", "🎤 최애 아이돌"]
+        )
+        
+        # 2. 추가 버튼과 연동되는 내용 입력 폼
+        new_taste_input = st.text_input(
+            "추가하고 싶은 구체적인 관심사를 적어주세요:", 
+            placeholder="예: 최애 아이돌 멤버 이름, 매점 빵 이름, 추천 플레이리스트 등"
+        )
         
         if st.button("➕ 등록하기"):
             if new_taste_input.strip():
-                st.session_state.tastes.append(f"✨ {new_taste_input.strip()}")
-                st.success("새로운 취향 카드가 하단 리스트에 실시간 추가되었습니다!")
+                # 세션 데이터에 고유 ID값과 함께 딕셔너리로 저장
+                st.session_state.tastes_list.append({
+                    "id": st.session_state.taste_id_counter,
+                    "category": select_category,
+                    "text": new_taste_input.strip()
+                })
+                st.session_state.taste_id_counter += 1
+                st.success(f"[{select_category}] 파트에 새로운 취향 카드가 실시간 추가되었습니다!")
                 st.rerun()
             else:
                 st.error("내용을 한 글자 이상 입력한 후 플러스 버튼을 눌러주세요.")
                 
-    st.write("") # 간격 띄우기
+    st.write("") 
     
-    # 누적된 취향 카드를 화면에 그리드 형태로 렌더링
-    t_col1, t_col2 = st.columns(2)
-    for index, taste_text in enumerate(st.session_state.tastes):
-        if index % 2 == 0:
-            with t_col1:
-                st.markdown(f'<div class="taste-card">{taste_text}</div>', unsafe_allow_html=True)
-        else:
-            with t_col2:
-                st.markdown(f'<div class="taste-card">{taste_text}</div>', unsafe_allow_html=True)
+    # 누적된 취향 카드를 화면에 그리드 형태로 렌더링하고 각각 삭제 버튼 배치
+    if len(st.session_state.tastes_list) == 0:
+        st.info("현재 등록된 취향 카드가 없습니다. 첫 번째 카드를 추가해 보세요!")
+    else:
+        # 카드를 2열(Grid) 구조로 배치
+        t_col1, t_col2 = st.columns(2)
+        
+        for index, taste_item in enumerate(st.session_state.tastes_list):
+            # 홀짝 분기 처리로 열 분리
+            target_col = t_col1 if index % 2 == 0 else t_col2
+            
+            with target_col:
+                # 카드 외형 디자인 렌더링
+                st.markdown(f"""
+                <div class="taste-box">
+                    <span class="taste-tag">{taste_item['category']}</span>
+                    <div class="taste-text">✨ {taste_item['text']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # 삭제 기능을 위한 고유 키값 할당 버튼 배치
+                if st.button(f"🗑️ 이 취향 삭제", key=f"del_{taste_item['id']}"):
+                    # 해당 ID 아이템을 리스트에서 제거
+                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
+                    st.toast("선택하신 취향 카드가 삭제되었습니다.", icon="🗑️")
+                    st.rerun()
 
 # [푸터 영역]
 st.markdown("""
