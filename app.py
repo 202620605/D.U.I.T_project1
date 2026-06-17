@@ -210,14 +210,14 @@ st.sidebar.title("💚 DUIT 메뉴")
 menu_options = ["🏠 메인 홈"]
 
 if st.session_state.boss_verified:
-    menu_options.append("👑 부장 전용 관리관")
+    menu_options.append("👑 부장 전용 관리 페이지")
 
 selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu_options)
 st.sidebar.markdown("---")
 
-# 부장 로그인 관리 (요청대로 '게이트' 단어 전면 제거)
+# 부장 로그인 관리 (요청 반영: '관리 페이지' 및 '전권 관리 모드'로 명칭 변경)
 if st.session_state.boss_verified:
-    st.sidebar.success("👑 부장 마스터 모드 활성화 중")
+    st.sidebar.success("👑 부장 전권 관리 모드 활성화 중")
     if st.sidebar.button("부장 모드 종료"):
         st.session_state.boss_verified = False
         st.rerun()
@@ -362,7 +362,7 @@ if selected_menu == "🏠 메인 홈":
     else:
         st.success(f"✅ 현재 {st.session_state.current_user} 계정으로 로그인되어 있습니다.")
 
-    # --- 취향 공유 섹션 (if-else 문 외부 분리 완료) ---
+    # --- 취향 공유 섹션 ---
     st.markdown('<div class="section-title">✨ 부원 취향 공유 공간</div>', unsafe_allow_html=True)
 
     if not st.session_state.logged_in:
@@ -410,12 +410,12 @@ if selected_menu == "🏠 메인 홈":
 
 
 # ==============================================================================
-# 👑 2. 부장 전용 단독 마스터 마스터룸 (전체 칸 수정 권한 부여)
+# 👑 2. 부장 전용 단독 관리 페이지 (수정 반영 완료)
 # ==============================================================================
-elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_verified:
+elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state.boss_verified:
     
-    st.title("👑 DUIT 부장 전용 만능 마스터 제어 센터")
-    st.write("메인 홈 화면에 노출되는 모든 카드 레이아웃의 콘텐츠를 이곳에서 커스텀 수정할 수 있습니다.")
+    st.title("👑 DUIT 부장 전용 전권 관리 대시보드")
+    st.write("메인 홈 화면에 노출되는 모든 레이아웃의 콘텐츠를 이곳에서 커스텀 수정할 수 있습니다.")
     st.markdown("---")
     
     # 🛠️ [1] ABOUT DUIT 칸 수정 (위치 & 과잠)
@@ -438,7 +438,7 @@ elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_v
             st.session_state.about_jacket_base = jkt_base
             st.session_state.about_jacket_point = jkt_point
             st.session_state.about_jacket_img_text = jkt_img_text
-            st.success("ABOUT DUIT 정보가 완전히 변경되었습니다. 메인 홈을 확인하세요!")
+            st.success("ABOUT DUIT 정보가 변경되었습니다. 메인 홈에서 확인하세요!")
             st.rerun()
 
     st.markdown("---")
@@ -456,7 +456,7 @@ elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_v
         if st.form_submit_button("💾 부서 소개 정보 업데이트"):
             st.session_state.board_dept_intro = dept_intro
             st.session_state.board_dept_list = [d0, d1, d2]
-            st.success("부서 소개 내용이 변경되었습니다!")
+            st.success("부서 소개 내용이 업데이트되었습니다!")
             st.rerun()
 
     st.markdown("---")
@@ -464,7 +464,7 @@ elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_v
     # 🛠️ [3] 연간 일정 칸 수정
     st.subheader("📅 [동아리 게시판] 연간 일정 표 데이터 수정")
     with st.form("schedule_edit_form"):
-        st.write("메인 홈 연간 일정 표 테이블에 들어갈 월별 일정 데이터입니다.")
+        st.write("메인 홈 연간 일정 표에 노출할 월별 데이터를 수정합니다.")
         updated_schedules = []
         for idx, sched in enumerate(st.session_state.board_schedule_list):
             sc_c1, sc_c2 = st.columns([1, 4])
@@ -474,7 +474,7 @@ elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_v
             
         if st.form_submit_button("💾 연간 일정 표 즉시 변경"):
             st.session_state.board_schedule_list = updated_schedules
-            st.success("연간 일정 표 디자인 내부 데이터가 전면 수정되었습니다!")
+            st.success("연간 일정 내부 표 데이터가 전면 수정되었습니다!")
             st.rerun()
 
     st.markdown("---")
@@ -535,7 +535,7 @@ elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_v
                     st.toast("부장 권한으로 글 내용이 수정되었습니다.")
                 
                 if st.button("🗑️ 해당 카드 영구 파기", key=f"final_del_{t_item['id']}"):
-                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
+                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != t_item['id']]
                     st.rerun()
 
 
