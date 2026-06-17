@@ -149,7 +149,7 @@ if 'approved_users' not in st.session_state:
         "30101": "1234"
     }
 
-# 메인 홈 '이전 활동 보고' 데이터 리스트
+# 메인 홈 '이전 활동 보고' 데이터 리스트 (부장목록 데이터)
 if 'boss_log_list' not in st.session_state:
     st.session_state.boss_log_list = [
         "03월: 신입 부원 모집, 면접 및 오리엔테이션",
@@ -172,50 +172,11 @@ if 'tastes_list' not in st.session_state:
 if 'taste_id_counter' not in st.session_state:
     st.session_state.taste_id_counter = 4
 
-# ----------------- 💻 사이드바 목차 제어 시스템 -----------------
-st.sidebar.title("💚 DUIT 메뉴")
-
-# 기본 목차 구성
-menu_options = ["🏠 메인 홈"]
-
-# 부장 인증 상태일 때만 목차(메뉴) 리스트에 추가됨
-if st.session_state.boss_verified:
-    menu_options.append("👑 부장 전용 관리관")
-
-selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu_options)
-
-st.sidebar.markdown("---")
-
-# 사이드바 하단 부원 인증 및 부장 시크릿 로그인 게이트
-if st.session_state.boss_verified:
-    st.sidebar.success("👑 부장 마스터 모드 활성화 중")
-    if st.sidebar.button("부장 모드 종료"):
-        st.session_state.boss_verified = False
-        st.rerun()
-else:
-    st.sidebar.markdown("### 🔑 부장 인증 게이트")
-    boss_pwd_input = st.sidebar.text_input("마스터 패스워드 입력:", type="password", placeholder="비밀번호 입력 시 목차 오픈")
-    if boss_pwd_input == "2025":
-        st.session_state.boss_verified = True
-        st.sidebar.success("부장 인증 완료! 상단 목차를 확인하세요.")
-        st.rerun()
-
-st.sidebar.markdown("---")
-if st.session_state.logged_in:
-    st.sidebar.success(f"🔒 {st.session_state.current_user} 로그인 완료")
-    if st.sidebar.button("부원 로그아웃"):
-        st.session_state.logged_in = False
-        st.session_state.current_user = ""
-        st.rerun()
-else:
-    st.sidebar.warning("🔓 부원 비로그인 상태")
-
 
 # ==============================================================================
-# 🏠 1. [페이지 1] 메인 홈 화면
+# 🏠 함수 1: [메인 홈] 화면 레이아웃 정의
 # ==============================================================================
-if selected_menu == "🏠 메인 홈":
-
+def main_home():
     # [상단 헤더 배너]
     st.markdown("""
     <div class="main-header">
@@ -338,8 +299,8 @@ if selected_menu == "🏠 메인 홈":
                             st.toast(f"{req_id} 학번의 등록 신청이 발송되었습니다.", icon="📩")
                     else:
                         st.error("학번과 비밀번호를 완벽히 입력해주세요.")
-else:
-    st.success(f"✅ 현재 {st.session_state.current_user} 계정으로 로그인되어 있습니다.")
+    else:
+        st.success(f"✅ 현재 {st.session_state.current_user} 계정으로 로그인되어 있습니다.")
 
     # --- 취향 공유 섹션 ---
     st.markdown('<div class="section-title">✨ 부원 취향 공유 룸</div>', unsafe_allow_html=True)
@@ -389,10 +350,9 @@ else:
 
 
 # ==============================================================================
-# 👑 2. [페이지 2] 완벽히 독립된 부장 전용 관리관 페이지
+# 👑 함수 2: [부장 전용 관리관] 완전 독립형 독립 페이지 정의
 # ==============================================================================
-elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_verified:
-    
+def admin_page():
     st.title("👑 DUIT 부장 독립형 마스터 대시보드")
     st.write("사이드바 목차(메뉴)를 클릭하여 진입한 완전 분리형 관리 전용 페이지입니다.")
     st.markdown("---")
@@ -457,6 +417,52 @@ elif selected_menu == "👑 부장 전용 관리관" and st.session_state.boss_v
                 if st.button("🗑️ 이 카드 완전 삭제", key=f"master_del_p_{t_item['id']}"):
                     st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != t_item['id']]
                     st.rerun()
+
+
+# ==============================================================================
+# 💻 3. 라우팅 및 사이드바 렌더링 영역 (메인 실행부)
+# ==============================================================================
+# 기본 목차 구성
+menu_options = ["🏠 메인 홈"]
+
+# 부장 인증 상태일 때만 목차 리스트에 추가됨
+if st.session_state.boss_verified:
+    menu_options.append("👑 부장 전용 관리관")
+
+selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu_options)
+
+st.sidebar.markdown("---")
+
+# 사이드바 하단 부원 인증 및 부장 시크릿 로그인 게이트
+if st.session_state.boss_verified:
+    st.sidebar.success("👑 부장 마스터 모드 활성화 중")
+    if st.sidebar.button("부장 모드 종료"):
+        st.session_state.boss_verified = False
+        st.rerun()
+else:
+    st.sidebar.markdown("### 🔑 부장 인증 게이트")
+    boss_pwd_input = st.sidebar.text_input("마스터 패스워드 입력:", type="password", placeholder="비밀번호 입력 시 목차 오픈")
+    if boss_pwd_input == "2025":
+        st.session_state.boss_verified = True
+        st.rerun()
+
+st.sidebar.markdown("---")
+if st.session_state.logged_in:
+    st.sidebar.success(f"🔒 {st.session_state.current_user} 로그인 완료")
+    if st.sidebar.button("부원 로그아웃"):
+        st.session_state.logged_in = False
+        st.session_state.current_user = ""
+        st.rerun()
+else:
+    st.sidebar.warning("🔓 부원 비로그인 상태")
+
+
+# ⭐ 선택된 목차에 맞춰 완벽 분리된 함수형 라우팅 실행
+if selected_menu == "🏠 메인 홈":
+    main_home()
+elif selected_menu == "👑 부장 전용 관리관":
+    admin_page()
+
 
 # [공통 푸터 영역]
 st.markdown("""
