@@ -169,13 +169,13 @@ if 'board_schedule_list' not in st.session_state:
         {"month": "06월", "plan": "축제, 개인탐구, 홈페이지 만들기"}
     ]
 
-# 👥 정식 승인 부원 목록 (초기에는 오직 부장 계정 20401만 존재)
+# 👥 정식 승인 부원 목록
 if 'approved_users' not in st.session_state:
     st.session_state.approved_users = {
         "20401": "2025" 
     }
 
-# 이전 활동 보고 표 데이터 형태로 구조 변경 (연간 일정 표 스타일 요구 반영)
+# 이전 활동 보고 표 데이터
 if 'boss_log_list' not in st.session_state:
     st.session_state.boss_log_list = [
         {"month": "03월", "plan": "신입 부원 모집, 면접 및 오리엔테이션 완료"},
@@ -193,14 +193,11 @@ if 'taste_categories' not in st.session_state:
         "🎤 최애 아이돌을 공유해요"
     ]
 
-# 취향 공유 등록 데이터 리스트
+# 취향 공유 등록 데이터 리스트 (요청 반영: 기존 예시 박스 2개 완전히 삭제하여 초기 상태 빈 배열로 세팅)
 if 'tastes_list' not in st.session_state:
-    st.session_state.tastes_list = [
-        {"id": 0, "category": "🎵 최애 플레이리스트를 공유해요", "text": "코딩할 때 듣기 좋은 뉴에이지 추천합니다.", "owner": "20401"},
-        {"id": 1, "category": "🍕 매점 꿀조합", "text": "치즈불닭볶음면에 스트링치즈 추가해보세요!", "owner": "20401"}
-    ]
+    st.session_state.tastes_list = []
 if 'taste_id_counter' not in st.session_state:
-    st.session_state.taste_id_counter = 2
+    st.session_state.taste_id_counter = 0
 
 
 # ----------------- 💻 사이드바 목차 및 인증 제어 -----------------
@@ -215,7 +212,7 @@ selected_menu = st.sidebar.radio("이동할 페이지를 선택하세요:", menu
 st.sidebar.markdown("---")
 
 if st.session_state.boss_verified:
-    st.sidebar.success("👑 부장 전권 관리 모드 활성화 중")
+    st.sidebar.success("👑 부장 관리 모드 활성화 중")
     if st.sidebar.button("부장 모드 종료"):
         st.session_state.boss_verified = False
         st.rerun()
@@ -305,7 +302,6 @@ if selected_menu == "🏠 메인 홈":
         st.markdown('</tbody></table></div>', unsafe_allow_html=True)
 
     with b_col3:
-        # [요청 반영 디자인 변경]: '이전 활동 보고' 칸 디자인을 연간 일정 표 스타일과 100% 동일하게 구현
         st.markdown('<div class="info-card"><h3>🚀 이전 활동 보고</h3>', unsafe_allow_html=True)
         st.markdown('<table class="schedule-table"><thead><tr><th>월별</th><th>활동 기록 내용</th></tr></thead><tbody>', unsafe_allow_html=True)
         for log_item in st.session_state.boss_log_list:
@@ -353,11 +349,9 @@ if selected_menu == "🏠 메인 홈":
                             })
                             st.toast(f"{req_id} 학번의 등록 신청이 발송되었습니다.", icon="📩")
                     else:
-                        st.error("학번과 비밀번호를 완벽히 입력해주세요.")
+                        st.error("학번 and 비밀번호를 완벽히 입력해주세요.")
     else:
         st.success(f"✅ 현재 {st.session_state.current_user} 계정으로 로그인되어 있습니다.")
-
-    # [요청 반영 완료]: 일반 메인 홈 화면에서는 부원 명단 리스트 컴포넌트를 완전히 삭제했습니다.
 
     # --- 취향 공유 섹션 ---
     st.markdown('<div class="section-title">✨ 부원 취향 공유 공간</div>', unsafe_allow_html=True)
@@ -368,7 +362,6 @@ if selected_menu == "🏠 메인 홈":
         st.write("동아리 부원들이 파트별 관심사를 자유롭게 공유하는 소통 공간입니다.")
         
         with st.expander("➕ 나의 취향 조각 하나 추가하기", expanded=False):
-            # [요청 반영 완료]: 부장 페이지에서 새로 생성한 커스텀 파트들이 여기에 자동 연동되어 나타납니다.
             select_category = st.selectbox(
                 "어느 파트에 넣을 건지 선택해주세요:",
                 st.session_state.taste_categories
@@ -390,7 +383,7 @@ if selected_menu == "🏠 메인 홈":
         st.write("") 
         
         if len(st.session_state.tastes_list) == 0:
-            st.info("현재 등록된 취향 카드가 없습니다.")
+            st.info("현재 등록된 취향 카드가 없습니다. 첫 번째 카드를 등록해 보세요!")
         else:
             t_col1, t_col2 = st.columns(2)
             for index, taste_item in enumerate(st.session_state.tastes_list):
@@ -414,17 +407,18 @@ if selected_menu == "🏠 메인 홈":
 # ==============================================================================
 elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state.boss_verified:
     
-    st.title("👑 DUIT 부장 전용 전권 관리 대시보드")
+    # [요청 반영 완료]: '전권' 글자 삭제
+    st.title("👑 DUIT 부장 전용 관리 대시보드")
     st.write("메인 홈 화면에 노출되는 모든 콘텐츠와 파트, 전체 부원들의 상태를 마스터 통제합니다.")
     st.markdown("---")
 
-    # 👥 [요청 반영 완료]: 부원 명단 조회는 오직 이곳 부장용 페이지에서만 가능합니다.
-    st.subheader("👥 동아리 가입 인원 상태 현황판")
+    # 👥 [요청 반영 완료]: '현황판' 대신 '명단'으로 텍스트 변경
+    st.subheader("👥 동아리 가입 인원 상태 명단")
     user_list_text = ", ".join([f"**{uid} 부원**" for uid in st.session_state.approved_users.keys()])
     st.info(f"현재 정식 승인 부원 목록: {user_list_text}")
     st.markdown("---")
     
-    # 🛠️ [1] ABOUT DUIT 칸 수정 (위치 & 과잠)
+    # 🛠️ [1] ABOUT DUIT 칸 수정
     st.subheader("📍 [ABOUT DUIT] 위치 및 과잠 칸 콘텐츠 수정")
     with st.form("about_edit_form"):
         c1, c2 = st.columns(2)
@@ -485,7 +479,7 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
 
     st.markdown("---")
     
-    # 🚀 [4] 이전 활동 보고 표 데이터 관리소 (표 디자인 맞춤 반영 수정)
+    # 🚀 [4] 이전 활동 보고 표 데이터 관리소
     st.subheader("🚀 [이전 활동 보고] 표 데이터 수정 및 행 추가")
     with st.form("boss_log_edit_form"):
         st.write("메인 홈 이전 활동 보고 표에 노출할 월별 데이터를 제어합니다.")
@@ -563,7 +557,7 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
 
     st.markdown("---")
 
-    # 📂 [요청 반영 완료]: 파트 관리 컴포넌트 레이아웃의 '가장 마지막' 순서로 이동 배치
+    # 📂 [요청 반영 완료]: 파트 관리 컴포넌트 레이아웃의 가장 마지막 순서 배치
     st.subheader("📂 [파트 관리] 새로운 취향 공유 파트 개설 및 추가")
     with st.form("add_category_form"):
         new_cat_name = st.text_input("새로 개설하고 싶은 파트 명을 입력하세요 (예: 🎮 추천 보드게임):")
