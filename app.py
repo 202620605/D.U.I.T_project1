@@ -169,23 +169,23 @@ if 'board_schedule_list' not in st.session_state:
         {"month": "06월", "plan": "축제, 개인탐구, 홈페이지 만들기"}
     ]
 
-# 👥 정식 승인 부원 목록 (요청 반영: 오직 부장 계정 20401만 존재하도록 초기화)
+# 👥 정식 승인 부원 목록 (초기에는 오직 부장 계정 20401만 존재)
 if 'approved_users' not in st.session_state:
     st.session_state.approved_users = {
         "20401": "2025" 
     }
 
-# 이전 활동 보고 및 가입 신청 대기 큐
+# 이전 활동 보고 표 데이터 형태로 구조 변경 (연간 일정 표 스타일 요구 반영)
 if 'boss_log_list' not in st.session_state:
     st.session_state.boss_log_list = [
-        "03월: 신입 부원 모집, 면접 및 오리엔테이션",
-        "05월: 모의토론, 모둠탐구",
-        "06월: 축제, 개인탐구, 홈페이지 만들기"
+        {"month": "03월", "plan": "신입 부원 모집, 면접 및 오리엔테이션 완료"},
+        {"month": "05월", "plan": "주제별 모의토론 및 소모둠 탐구 활동 진행"},
+        {"month": "06월", "plan": "교내 축제 참여 및 개인별 홈페이지 제작 프로젝트"}
     ]
 if 'signup_queue' not in st.session_state:
     st.session_state.signup_queue = []
 
-# ➕ 취향 공유 파트(카테고리) 목록 동적 관리 기능 추가
+# 📂 운영 파트(카테고리) 목록
 if 'taste_categories' not in st.session_state:
     st.session_state.taste_categories = [
         "🎵 최애 플레이리스트를 공유해요", 
@@ -193,7 +193,7 @@ if 'taste_categories' not in st.session_state:
         "🎤 최애 아이돌을 공유해요"
     ]
 
-# 취향 공유 등록 데이터 리스트 (중복 및 불필요 문구 제거 완료 / 등록자 user_id 추적 추가)
+# 취향 공유 등록 데이터 리스트
 if 'tastes_list' not in st.session_state:
     st.session_state.tastes_list = [
         {"id": 0, "category": "🎵 최애 플레이리스트를 공유해요", "text": "코딩할 때 듣기 좋은 뉴에이지 추천합니다.", "owner": "20401"},
@@ -305,14 +305,12 @@ if selected_menu == "🏠 메인 홈":
         st.markdown('</tbody></table></div>', unsafe_allow_html=True)
 
     with b_col3:
-        st.markdown("""
-        <div class="info-card">
-            <h3>🚀 이전 활동 보고</h3>
-            <h4 style="color:#222; margin-top:5px; margin-bottom:8px;">연간 핵심 일정 기록</h4>
-        """, unsafe_allow_html=True)
+        # [요청 반영 디자인 변경]: '이전 활동 보고' 칸 디자인을 연간 일정 표 스타일과 100% 동일하게 구현
+        st.markdown('<div class="info-card"><h3>🚀 이전 활동 보고</h3>', unsafe_allow_html=True)
+        st.markdown('<table class="schedule-table"><thead><tr><th>월별</th><th>활동 기록 내용</th></tr></thead><tbody>', unsafe_allow_html=True)
         for log_item in st.session_state.boss_log_list:
-            st.markdown(f"• {log_item}")
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(f"<tr><td>{log_item['month']}</td><td>{log_item['plan']}</td></tr>", unsafe_allow_html=True)
+        st.markdown('</tbody></table></div>', unsafe_allow_html=True)
 
     # --- 로그인 / 회원가입 섹션 ---
     st.markdown('<div class="section-title">DUIT 부원 인증</div>', unsafe_allow_html=True)
@@ -359,11 +357,7 @@ if selected_menu == "🏠 메인 홈":
     else:
         st.success(f"✅ 현재 {st.session_state.current_user} 계정으로 로그인되어 있습니다.")
 
-    # 👥 [요청 반영 명단 위치 이동]: 부원 가입 신청 칸 바로 하단 배치
-    st.write("")
-    with st.expander("👥 현재 등록 완료된 정식 부원 명단 보기", expanded=True):
-        user_list_text = ", ".join([f"**{uid} 부원**" for uid in st.session_state.approved_users.keys()])
-        st.info(f"현재 등록 완료 부원: {user_list_text}")
+    # [요청 반영 완료]: 일반 메인 홈 화면에서는 부원 명단 리스트 컴포넌트를 완전히 삭제했습니다.
 
     # --- 취향 공유 섹션 ---
     st.markdown('<div class="section-title">✨ 부원 취향 공유 공간</div>', unsafe_allow_html=True)
@@ -374,7 +368,7 @@ if selected_menu == "🏠 메인 홈":
         st.write("동아리 부원들이 파트별 관심사를 자유롭게 공유하는 소통 공간입니다.")
         
         with st.expander("➕ 나의 취향 조각 하나 추가하기", expanded=False):
-            # 동적으로 추가된 카테고리 셀렉트박스에 자동 연동
+            # [요청 반영 완료]: 부장 페이지에서 새로 생성한 커스텀 파트들이 여기에 자동 연동되어 나타납니다.
             select_category = st.selectbox(
                 "어느 파트에 넣을 건지 선택해주세요:",
                 st.session_state.taste_categories
@@ -387,7 +381,7 @@ if selected_menu == "🏠 메인 홈":
                         "id": st.session_state.taste_id_counter,
                         "category": select_category,
                         "text": new_taste_input.strip(),
-                        "owner": st.session_state.current_user  # 등록인 학번 추적 기록
+                        "owner": st.session_state.current_user
                     })
                     st.session_state.taste_id_counter += 1
                     st.success("취향 카드가 추가되었습니다!")
@@ -409,7 +403,6 @@ if selected_menu == "🏠 메인 홈":
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # [요청 반영 조건]: 오직 내가 등록한 카드만 메인화면에서 직접 삭제 가능
                     if taste_item['owner'] == st.session_state.current_user:
                         if st.button(f"🗑️ 내가 쓴 글 삭제", key=f"del_{taste_item['id']}"):
                             st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
@@ -425,29 +418,10 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
     st.write("메인 홈 화면에 노출되는 모든 콘텐츠와 파트, 전체 부원들의 상태를 마스터 통제합니다.")
     st.markdown("---")
 
-    # 👥 [명단 출력] 부장 페이지 상단에서도 당연히 전체 부원 확인 가능
+    # 👥 [요청 반영 완료]: 부원 명단 조회는 오직 이곳 부장용 페이지에서만 가능합니다.
     st.subheader("👥 동아리 가입 인원 상태 현황판")
-    user_list_text = ", ".join([f"**{uid}**" for uid in st.session_state.approved_users.keys()])
+    user_list_text = ", ".join([f"**{uid} 부원**" for uid in st.session_state.approved_users.keys()])
     st.info(f"현재 정식 승인 부원 목록: {user_list_text}")
-    st.markdown("---")
-
-    # ➕ [신규 추가 기능] 새로운 취향 공유 파트(카테고리) 추가하기 칸
-    st.subheader("📂 [파트 관리] 새로운 취향 공유 파트 개설 및 추가")
-    with st.form("add_category_form"):
-        new_cat_name = st.text_input("새로 개설하고 싶은 파트 명을 입력하세요 (예: 🎮 추천 보드게임):")
-        if st.form_submit_button("➕ 새로운 파트 추가 개설"):
-            if new_cat_name.strip():
-                if new_cat_name.strip() not in st.session_state.taste_categories:
-                    st.session_state.taste_categories.append(new_cat_name.strip())
-                    st.success(f"'{new_cat_name.strip()}' 파트가 새롭게 추가되어 실시간 연동됩니다!")
-                    st.rerun()
-                else:
-                    st.warning("이미 존재하는 파트 이름입니다.")
-            else:
-                st.error("추가할 파트명을 입력해 주세요.")
-
-    st.write("**현재 운영 중인 공유 파트 목록:**")
-    st.code(", ".join(st.session_state.taste_categories))
     st.markdown("---")
     
     # 🛠️ [1] ABOUT DUIT 칸 수정 (위치 & 과잠)
@@ -511,27 +485,43 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
 
     st.markdown("---")
     
-    # 🚀 [4] 이전 활동 보고 데이터 커스텀 편집
-    st.subheader("🚀 '이전 활동 보고' 목록 추가 및 삭제")
-    with st.form("boss_log_add_form_final"):
-        input_log = st.text_input("추가할 내역을 작성하세요 (예: '07월: 동아리 해커톤 대회 개최'):")
-        add_log_btn = st.form_submit_button("➕ 이전 활동 보고 추가")
-        if add_log_btn and input_log.strip():
-            st.session_state.boss_log_list.append(input_log.strip())
-            st.success("활동 보고 리스트에 성공적으로 추가되었습니다!")
+    # 🚀 [4] 이전 활동 보고 표 데이터 관리소 (표 디자인 맞춤 반영 수정)
+    st.subheader("🚀 [이전 활동 보고] 표 데이터 수정 및 행 추가")
+    with st.form("boss_log_edit_form"):
+        st.write("메인 홈 이전 활동 보고 표에 노출할 월별 데이터를 제어합니다.")
+        updated_logs = []
+        for idx, log_item in enumerate(st.session_state.boss_log_list):
+            l_c1, l_c2 = st.columns([1, 4])
+            lm_val = l_c1.text_input(f"기록 월 ({idx+1}행)", value=log_item['month'], key=f"lm_key_{idx}")
+            lp_val = l_c2.text_input(f"활동 내역 ({idx+1}행)", value=log_item['plan'], key=f"lp_key_{idx}")
+            updated_logs.append({"month": lm_val, "plan": lp_val})
+            
+        if st.form_submit_button("💾 이전 활동 보고 표 전체 갱신"):
+            st.session_state.boss_log_list = updated_logs
+            st.success("이전 활동 보고 데이터 표가 실시간 반영 완료되었습니다!")
             st.rerun()
 
-    st.write("**현재 등록된 활동 목록 (클릭 시 실시간 삭제):**")
-    for idx, log_text in enumerate(st.session_state.boss_log_list):
+    with st.form("boss_log_add_row_form"):
+        st.write("**➕ 새로운 기록 행 한 줄 추가하기**")
+        add_m = st.text_input("활동 월 입력 (예: '07월')")
+        add_p = st.text_input("상세 활동 내용 입력")
+        if st.form_submit_button("➕ 새로운 활동 행 추가"):
+            if add_m.strip() and add_p.strip():
+                st.session_state.boss_log_list.append({"month": add_m.strip(), "plan": add_p.strip()})
+                st.success("활동 기록 행이 한 줄 신설되었습니다!")
+                st.rerun()
+
+    st.write("**현재 등록된 활동 리스트 삭제 관리:**")
+    for idx, log_item in enumerate(st.session_state.boss_log_list):
         cl1, cl2 = st.columns([6, 1])
-        cl1.info(log_text)
-        if cl2.button("🗑️ 삭제", key=f"final_remove_log_{idx}"):
+        cl1.info(f"[{log_item['month']}] {log_item['plan']}")
+        if cl2.button("🗑️ 행 삭제", key=f"remove_log_row_{idx}"):
             st.session_state.boss_log_list.pop(idx)
             st.rerun()
             
     st.markdown("---")
     
-    # 📩 [5] 신규 부원 가입 신청 관리소 (수락 누르면 부원 목록에 실시간 즉시 반영)
+    # 📩 [5] 신규 부원 가입 신청 관리소
     st.subheader("📩 부원 가입 신청 수락/반려 제어기")
     if not st.session_state.signup_queue:
         st.info("현재 대기 중인 신규 가입 신청서가 없습니다.")
@@ -554,7 +544,7 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
                         
     st.markdown("---")
     
-    # 🛠️ [6] 부장전용 마스터 글 파기 제어소 (일반 부원이 지우지 못하는 다른 사람 글도 원천 삭제 가능)
+    # 🛠️ [6] 부원 게시물 마스터 통제소
     st.subheader("🛠️ 전체 부원 취향 조각 마스터 통제소")
     if len(st.session_state.tastes_list) == 0:
         st.info("부원들이 등록한 취향 카드가 비어있습니다.")
@@ -568,8 +558,28 @@ elif selected_menu == "👑 부장 전용 관리 페이지" and st.session_state
                     st.toast("부장 권한으로 글 내용이 수정되었습니다.")
                 
                 if st.button("🗑️ 해당 카드 영구 파기", key=f"final_del_{t_item['id']}"):
-                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != taste_item['id']]
+                    st.session_state.tastes_list = [item for item in st.session_state.tastes_list if item['id'] != t_item['id']]
                     st.rerun()
+
+    st.markdown("---")
+
+    # 📂 [요청 반영 완료]: 파트 관리 컴포넌트 레이아웃의 '가장 마지막' 순서로 이동 배치
+    st.subheader("📂 [파트 관리] 새로운 취향 공유 파트 개설 및 추가")
+    with st.form("add_category_form"):
+        new_cat_name = st.text_input("새로 개설하고 싶은 파트 명을 입력하세요 (예: 🎮 추천 보드게임):")
+        if st.form_submit_button("➕ 새로운 파트 추가 개설"):
+            if new_cat_name.strip():
+                if new_cat_name.strip() not in st.session_state.taste_categories:
+                    st.session_state.taste_categories.append(new_cat_name.strip())
+                    st.success(f"'{new_cat_name.strip()}' 파트가 새롭게 추가되어 실시간 연동됩니다!")
+                    st.rerun()
+                else:
+                    st.warning("이미 존재하는 파트 이름입니다.")
+            else:
+                st.error("추가할 파트명을 입력해 주세요.")
+
+    st.write("**현재 운영 중인 공유 파트 목록:**")
+    st.code(", ".join(st.session_state.taste_categories))
 
 
 # ----------------- 🌐 시스템 공통 하단 푸터 -----------------
